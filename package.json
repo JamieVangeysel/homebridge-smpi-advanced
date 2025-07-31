@@ -17,11 +17,11 @@
     "node": ">=10.17.0",
     "homebridge": ">=1.0.0"
   },
-  "main": "dist/index.js",
+  "main": "index.min.js",
   "scripts": {
     "lint": "eslint src/**.ts --max-warnings=0 npm run lint && ",
     "watch": "npm run build && npm link && nodemon",
-    "build": "rimraf ./dist && tsc",
+    "build": "esbuild ./src//index.ts --bundle --platform=node --minify --packages=external --external:'./config' --outfile=index.min.js",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
@@ -36,6 +36,7 @@
     "@types/node": "^14.10.3",
     "@typescript-eslint/eslint-plugin": "^4.1.1",
     "@typescript-eslint/parser": "^4.1.1",
+    "esbuild": "^0.25.8",
     "eslint": "^7.9.0",
     "homebridge": "^1.2.2",
     "nodemon": "^2.0.4",

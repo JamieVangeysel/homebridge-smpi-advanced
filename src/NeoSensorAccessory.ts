@@ -1,9 +1,10 @@
-import { PlatformAccessory, CharacteristicGetCallback, Service } from 'homebridge'
+import { PlatformAccessory, CharacteristicGetCallback, Service, Logger } from 'homebridge'
 import { HomebridgePlatform, INeoTemperatureSensor } from './platform'
 
 import fetch from 'cross-fetch'
 
 export class NeoSensorAccessory {
+  private readonly log: Logger
   private readonly platform: HomebridgePlatform
   private readonly accessory: PlatformAccessory
   private readonly config: INeoTemperatureSensor
@@ -20,6 +21,7 @@ export class NeoSensorAccessory {
     this.temperature = null
     this.humidity = null
     // set accessory information
+    platform.log.warn('Setting op NeoSensorAccessory ' + config.name)
     this.accessory.getService(this.platform.Service.AccessoryInformation)
       .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Simplintho')
       .setCharacteristic(this.platform.Characteristic.Model, 'Simplintho Neo THP10')
@@ -36,7 +38,7 @@ export class NeoSensorAccessory {
     // in this example we are using the name we stored in the `accessory.context` in the `discoverDevices` method.
     this.serviceTemperature.setCharacteristic(this.platform.Characteristic.Name, config.name)
     this.serviceHumidity.setCharacteristic(this.platform.Characteristic.Name, config.name)
-    // this.log = this.platform.log;
+    this.log = this.platform.log
     // this.loggingService = new FakeGatoHistoryService('weather', this, {
     //   storage: 'fs',
     //   disableTimer: true,
@@ -60,35 +62,45 @@ export class NeoSensorAccessory {
      * the `updateCharacteristic` method.
      *
      */
-    this.updateStatus().then()
-    setInterval(this.updateStatus, 3000)
+    this.updateStatus()
+    const update = () => {
+      this.updateStatus()
+    }
+    setInterval(update, 10000)
   }
 
-  async updateStatus(): Promise<void> {
-    let temperature: number | undefined
-    let humidity: number | undefined
+  updateStatus(): void {
     try {
-      await fetch(this.fetchUrl).then(async (r) => {
-        const response = await r.json()
-        if (response.status === 200) {
-          if (response.data.length > 0) {
-            temperature = response.temperature
-            humidity = (response.humidity ?? 0) * 100
+      fetch(this.fetchUrl).then(async (res) => {
+        if (res.status === 200) {
+          const response = await res.json()
+          if (response.status === 'success') {
+            if (response.data.length > 0) {
+              this.temperature = response.data[0].temperature
+              this.humidity = (response.data[0].humidity ?? 0) * 100
+
+              this.serviceTemperature.updateCharacteristic(this.platform.Characteristic.CurrentTemperature, this.temperature)
+              this.serviceHumidity.updateCharacteristic(this.platform.Characteristic.CurrentRelativeHumidity, this.humidity)
+              return
+            }
           }
+          console.log(response.status, response.data?.length)
+          this.platform.log.error('Error updating temperature')
+
+          // this.temperature = temperature ?? 0
+          // this.humidity = humidity ?? 0
+          // this.loggingService.addEntry({
+          //   time: new Date().getTime() / 1000,
+          //   temp: this.temperature,
+          //   pressure: 1024,
+          //   humidity: this.humidity,
+          // });
+          // this.serviceTemperature.updateCharacteristic(this.platform.Characteristic.CurrentTemperature, this.temperature)
+          // this.serviceHumidity.updateCharacteristic(this.platform.Characteristic.CurrentRelativeHumidity, this.humidity)
+        } else {
+          this.platform.log.error(`Could not retrieve values from api; [${res.status}]'${this.fetchUrl}'`)
         }
-      }).catch(() => {
-        this.platform.log.error(`Could not get data from '${this.fetchUrl}'.`)
       })
-      this.temperature = temperature ?? 0
-      this.humidity = humidity ?? 0
-      // this.loggingService.addEntry({
-      //   time: new Date().getTime() / 1000,
-      //   temp: this.temperature,
-      //   pressure: 1024,
-      //   humidity: this.humidity,
-      // });
-      this.serviceTemperature.updateCharacteristic(this.platform.Characteristic.CurrentTemperature, this.temperature)
-      this.serviceHumidity.updateCharacteristic(this.platform.Characteristic.CurrentRelativeHumidity, this.humidity)
     } catch (err) {
       this.platform.log.error(`Could not get data from '${this.fetchUrl}'.`)
     }

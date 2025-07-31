@@ -77,7 +77,7 @@ export class HomebridgePlatform implements DynamicPlatformPlugin {
           // if you need to update the accessory.context then you should run `api.updatePlatformAccessories`. eg.:
           // existingAccessory.context.device = device;
           // this.api.updatePlatformAccessories([existingAccessory]);
-          const instance = new NeoSensorAccessory(this, existingAccessory, device)
+          new NeoSensorAccessory(this, existingAccessory, device)
         } else if (!device) {
           // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
           // remove platform accessories when no longer present
@@ -92,7 +92,7 @@ export class HomebridgePlatform implements DynamicPlatformPlugin {
         // store a copy of the device object in the `accessory.context`
         // the `context` property can be used to store any data about the accessory you may need
         accessory.context.device = device
-        const instance = new NeoSensorAccessory(this, accessory, device)
+        new NeoSensorAccessory(this, accessory, device)
         // link the accessory to your platform
         this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory])
       }
