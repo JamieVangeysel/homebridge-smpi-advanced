@@ -1,0 +1,1 @@
+# homebridge-smpi-advanced
