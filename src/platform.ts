@@ -37,7 +37,7 @@ export class HomebridgePlatform implements DynamicPlatformPlugin {
     // in order to ensure they weren't added to homebridge already. This event can also be used
     // to start discovery of new accessories.
     this.api.on('didFinishLaunching', () => {
-      log.debug('Executed didFinishLaunching callback')
+      this.log.debug('Executed didFinishLaunching callback')
       // run the method to discover / register your devices as accessories
       this.discoverDevices()
     })

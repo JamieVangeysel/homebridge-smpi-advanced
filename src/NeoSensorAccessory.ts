@@ -24,7 +24,7 @@ export class NeoSensorAccessory {
       .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Simplintho')
       .setCharacteristic(this.platform.Characteristic.Model, 'Simplintho Neo THP10')
       .setCharacteristic(this.platform.Characteristic.FirmwareRevision, '0.0.0')
-      .setCharacteristic(this.platform.Characteristic.SerialNumber, config.uuid)
+      .setCharacteristic(this.platform.Characteristic.SerialNumber, config.uuid.substring(0, 12))
     // get the TemperatureSensor service if it exists, otherwise create a new TemperatureSensor service
     // you can create multiple services for each accessory
     this.serviceTemperature = this.accessory.getService(this.platform.Service.TemperatureSensor)
@@ -34,8 +34,8 @@ export class NeoSensorAccessory {
       || this.accessory.addService(this.platform.Service.HumiditySensor)
     // set the service name, this is what is displayed as the default name on the Home app
     // in this example we are using the name we stored in the `accessory.context` in the `discoverDevices` method.
-    this.serviceTemperature.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.exampleDisplayName)
-    this.serviceHumidity.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.exampleDisplayName)
+    this.serviceTemperature.setCharacteristic(this.platform.Characteristic.Name, config.name)
+    this.serviceHumidity.setCharacteristic(this.platform.Characteristic.Name, config.name)
     // this.log = this.platform.log;
     // this.loggingService = new FakeGatoHistoryService('weather', this, {
     //   storage: 'fs',
