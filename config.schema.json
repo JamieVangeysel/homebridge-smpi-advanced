@@ -1,0 +1,233 @@
+{
+  "pluginAlias": "SMPI-Advanced",
+  "pluginType": "platform",
+  "singular": true,
+  "schema": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "title": "Name",
+        "type": "string",
+        "required": true,
+        "default": "Example Dynamic Platform"
+      },
+      "presenceDetectors": {
+        "title": "Presence Detertor List",
+        "type": "array",
+        "items": {
+          "title": "Url",
+          "type": "object",
+          "properties": {
+            "ip": {
+              "title": "IP",
+              "type": "string",
+              "required": true,
+              "default": "0.0.0.0"
+            },
+            "name": {
+              "title": "Name",
+              "type": "string",
+              "required": true,
+              "default": "Presence detector"
+            },
+            "type": {
+              "title": "Sensor Type",
+              "type": "string",
+              "required": true,
+              "default": "Samsung SmartTV"
+            }
+          }
+        }
+      },
+      "motionDetectors": {
+        "title": "Motion Detertor List",
+        "type": "array",
+        "items": {
+          "title": "Url",
+          "type": "object",
+          "properties": {
+            "ip": {
+              "title": "IP",
+              "type": "string",
+              "required": true,
+              "default": "0.0.0.0"
+            },
+            "name": {
+              "title": "Name",
+              "type": "string",
+              "required": true,
+              "default": "Motion detector"
+            },
+            "type": {
+              "title": "Sensor Type",
+              "type": "string",
+              "required": true,
+              "default": "http"
+            }
+          }
+        }
+      },
+      "neoSensors": {
+        "title": "Neo Sensor List",
+        "type": "array",
+        "items": {
+          "title": "Sensor",
+          "type": "object",
+          "properties": {
+            "uuid": {
+              "title": "Device uuid",
+              "type": "string",
+              "required": true,
+              "default": ""
+            },
+            "owner": {
+              "title": "Owner uuid",
+              "type": "string",
+              "required": true,
+              "default": ""
+            },
+            "name": {
+              "title": "Name",
+              "type": "string",
+              "required": true,
+              "default": ""
+            }
+          }
+        }
+      },
+      "thermostats": {
+        "title": "Neo Thermostat List",
+        "type": "array",
+        "items": {
+          "title": "Thermostat",
+          "type": "object",
+          "properties": {
+            "name": {
+              "title": "Thermostat name",
+              "type": "string",
+              "required": true,
+              "default": ""
+            },
+            "uuid": {
+              "title": "Thermostat device uuid",
+              "type": "string",
+              "required": true,
+              "default": ""
+            },
+            "ip": {
+              "title": "Thermostat IP",
+              "type": "string",
+              "required": true,
+              "default": ""
+            }
+          }
+        }
+      },
+      "switches": {
+        "title": "Neo Switches",
+        "type": "array",
+        "items": {
+          "title": "Plug",
+          "type": "object",
+          "properties": {
+            "name": {
+              "title": "Plug name",
+              "type": "string",
+              "required": true,
+              "default": ""
+            },
+            "type": {
+              "title": "Plug type (ip|http|statefull)",
+              "type": "string",
+              "required": true,
+              "default": ""
+            },
+            "ip": {
+              "title": "Plug IP",
+              "type": "string",
+              "required": false,
+              "default": ""
+            },
+            "onUrl": {
+              "title": "On URL location",
+              "type": "string",
+              "required": false
+            },
+            "offUrl": {
+              "title": "Off URL location",
+              "type": "string",
+              "required": false
+            },
+            "statefUrl": {
+              "title": "Status URL location",
+              "type": "string",
+              "required": false
+            }
+          }
+        }
+      },
+      "securitySystems": {
+        "title": "Security Systems using HTTP",
+        "type": "array",
+        "items": {
+          "properties": {
+            "name": {
+              "title": "System name",
+              "type": "string",
+              "required": true,
+              "default": "Security System"
+            },
+            "hostname": {
+              "title": "IP/FQDN of device",
+              "type": "string",
+              "required": true,
+              "default": "localhost"
+            },
+            "port": {
+              "title": "port of the web application",
+              "type": "number",
+              "required": true,
+              "default": 80
+            },
+            "make": {
+              "title": "Manufacturer of the device",
+              "type": "string",
+              "required": false
+            },
+            "model": {
+              "title": "Model of the device",
+              "type": "string",
+              "required": false
+            },
+            "sirenEnabled": {
+              "title": "Siren enabled for securitySystem",
+              "type": "boolean",
+              "required": false
+            },
+            "siren": {
+              "title": "Siren definition",
+              "type": "object",
+              "properties": {
+                "hostname": {
+                  "title": "Hostname of siren controller",
+                  "type": "string",
+                  "required": true
+                },
+                "onUrl": {
+                  "title": "On URL location",
+                  "type": "string",
+                  "required": false
+                },
+                "offUrl": {
+                  "title": "Off URL location",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
