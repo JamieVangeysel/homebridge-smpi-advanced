@@ -77,14 +77,13 @@ export class NeoSensorAccessory {
           if (response.status === 'success') {
             if (response.data.length > 0) {
               this.temperature = response.data[0].temperature
-              this.humidity = (response.data[0].humidity ?? 0) * 100
+              this.humidity = response.data[0].humidity ?? 0
 
-              this.serviceTemperature.updateCharacteristic(this.platform.Characteristic.CurrentTemperature, this.temperature)
-              this.serviceHumidity.updateCharacteristic(this.platform.Characteristic.CurrentRelativeHumidity, this.humidity)
+              this.serviceTemperature.updateCharacteristic(this.platform.Characteristic.CurrentTemperature, (this.heatIndex ?? this.temperature))
+              this.serviceHumidity.updateCharacteristic(this.platform.Characteristic.CurrentRelativeHumidity, this.humidity * 100)
               return
             }
           }
-          console.log(response.status, response.data?.length)
           this.platform.log.error('Error updating temperature')
 
           // this.temperature = temperature ?? 0
@@ -112,7 +111,7 @@ export class NeoSensorAccessory {
   handleCurrentTemperatureGet(callback: CharacteristicGetCallback): void {
     this.platform.log.debug('Triggered GET CurrentTemperature')
     // set this to a valid value for CurrentTemperature
-    const currentValue: number = this.temperature ?? 0
+    const currentValue: number = (this.heatIndex ?? this.temperature) ?? 0
     callback(null, currentValue)
   }
 
@@ -123,7 +122,37 @@ export class NeoSensorAccessory {
     this.platform.log.debug('Triggered GET CurrentRelativeHumidity')
     // set this to a valid value for CurrentRelativeHumidity
     const currentValue: number = this.humidity ?? 0
-    callback(null, currentValue)
+    callback(null, currentValue * 100)
+  }
+
+  get heatIndex() {
+    let result: number = undefined
+
+    if (this.temperature && this.humidity) {
+      result = this.calculateHeatIndex(this.temperature, this.humidity)
+      // this.platform.log.info(`Successfully calculated heatIndex from values; 'temp: ${this.temperature}, %: ${this.humidity}'. Result: ${result}`)
+    }
+
+    return result
+  }
+
+  calculateHeatIndex(temperature: number, relativeHumidity: number): number {
+    const T: number = (temperature * 1.8) + 32
+    const RH: number = relativeHumidity
+    let ADJUSTMENT: number = 0
+    let HI: number = 0.5 * (T + 61.0 + ((T - 68.0) * 1.2) + (RH * 0.094))
+
+    if ((HI + T) / 2 >= 80) {
+      HI = -42.379 + 2.04901523 * T + 10.14333127 * RH - .22475541 * T * RH - .00683783 * T * T - .05481717 * RH * RH + .00122874 * T * T * RH + .00085282 * T * RH * RH - .00000199 * T * T * RH * RH
+
+      if (T >= 80 && T <= 112 && RH <= 13) {
+        ADJUSTMENT = -1 * (((13 - RH) / 4) * Math.sqrt((17 - Math.abs(T - 95.)) / 17))
+      } else if (T >= 80 && T <= 87 && RH >= 85) {
+        ADJUSTMENT = ((RH - 85) / 10) * ((87 - T) / 5)
+      }
+    }
+
+    return ((HI + ADJUSTMENT - 32) / 1.8)
   }
 
   get fetchUrl(): string {

@@ -9,6 +9,7 @@ import {
 } from 'homebridge'
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings'
 import { NeoSensorAccessory } from './NeoSensorAccessory'
+import { SolarAccessory } from './SolarAccessory'
 
 export class HomebridgePlatform implements DynamicPlatformPlugin {
   readonly log: Logger
@@ -96,6 +97,27 @@ export class HomebridgePlatform implements DynamicPlatformPlugin {
         // link the accessory to your platform
         this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory])
       }
+    }
+
+    const uuid = this.api.hap.uuid.generate('SunriseSunset')
+    this.foundAccessoires.push(uuid)
+    const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid)
+    if (existingAccessory) {
+      // the accessory already exists
+      this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName)
+      // if you need to update the accessory.context then you should run `api.updatePlatformAccessories`. eg.:
+      // existingAccessory.context.device = device;
+      // this.api.updatePlatformAccessories([existingAccessory]);
+      new SolarAccessory(this, existingAccessory)
+    } else {
+      // create a new accessory
+      const accessory = new this.api.platformAccessory('SunriseSunset', uuid)
+      // store a copy of the device object in the `accessory.context`
+      // the `context` property can be used to store any data about the accessory you may need
+      // accessory.context.device = device
+      new SolarAccessory(this, accessory)
+      // link the accessory to your platform
+      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory])
     }
 
     // remove all accessories that were not found in config
