@@ -52,24 +52,24 @@ export class SolarAccessory {
     // set accessory information
     platform.log.info('Setting op SolarAccessory')
     this.accessory.getService(this.platform.Service.AccessoryInformation)
-      .setCharacteristic(this.platform.Characteristic.Manufacturer, 'SunriseSunset.io')
-      .setCharacteristic(this.platform.Characteristic.Model, 'Solar information')
-      .setCharacteristic(this.platform.Characteristic.FirmwareRevision, '1.0.0')
-      .setCharacteristic(this.platform.Characteristic.SerialNumber, 'SERIAL NUMBER')
+      .setCharacteristic(this.platform.api.hap.Characteristic.Manufacturer, 'SunriseSunset.io')
+      .setCharacteristic(this.platform.api.hap.Characteristic.Model, 'Solar information')
+      .setCharacteristic(this.platform.api.hap.Characteristic.FirmwareRevision, '1.0.0')
+      .setCharacteristic(this.platform.api.hap.Characteristic.SerialNumber, 'SERIAL NUMBER')
 
     this.service = this.accessory.getService(this.platform.Service.Lightbulb) || this.accessory.addService(this.platform.Service.Lightbulb)
 
     // set the service name, this is what is displayed as the default name on the Home app
     // in this example we are using the name we stored in the `accessory.context` in the `discoverDevices` method.
-    this.service.setCharacteristic(this.platform.Characteristic.Name, 'SunriseSunset')
+    this.service.setCharacteristic(this.platform.api.hap.Characteristic.Name, 'SunriseSunset')
 
     // register handlers for the On/Off Characteristic
-    this.service.getCharacteristic(this.platform.Characteristic.On)
+    this.service.getCharacteristic(this.platform.api.hap.Characteristic.On)
       .onSet(this.setOn.bind(this)) // SET - bind to the `setOn` method below
       .onGet(this.getOn.bind(this)) // GET - bind to the `getOn` method below
 
     // register handlers for the Brightness Characteristic
-    // this.service.getCharacteristic(this.platform.Characteristic.Brightness)
+    // this.service.getCharacteristic(this.platform.api.hap.Characteristic.Brightness)
     //   .onSet(this.setBrightness.bind(this)) // SET - bind to the `setBrightness` method below
 
     /**
@@ -100,38 +100,38 @@ export class SolarAccessory {
       || this.accessory.addService(this.platform.Service.MotionSensor, 'Dusk', 'Dusk-motion')
 
     this.serviceSunrise
-      .setCharacteristic(this.platform.Characteristic.Name, 'Sunrise')
-      .setCharacteristic(this.platform.Characteristic.ConfiguredName, 'Sunrise')
-      .getCharacteristic(this.platform.Characteristic.MotionDetected)
+      .setCharacteristic(this.platform.api.hap.Characteristic.Name, 'Sunrise')
+      .setCharacteristic(this.platform.api.hap.Characteristic.ConfiguredName, 'Sunrise')
+      .getCharacteristic(this.platform.api.hap.Characteristic.MotionDetected)
       .onGet(this.handleSunriseMotionDetectedGet.bind(this))
     this.serviceSunset
-      .setCharacteristic(this.platform.Characteristic.Name, 'Sunset')
-      .setCharacteristic(this.platform.Characteristic.ConfiguredName, 'Sunset')
-      .getCharacteristic(this.platform.Characteristic.MotionDetected)
+      .setCharacteristic(this.platform.api.hap.Characteristic.Name, 'Sunset')
+      .setCharacteristic(this.platform.api.hap.Characteristic.ConfiguredName, 'Sunset')
+      .getCharacteristic(this.platform.api.hap.Characteristic.MotionDetected)
       .onGet(this.handleSunsetMotionDetectedGet.bind(this))
 
     this.serviceNoon
-      .setCharacteristic(this.platform.Characteristic.Name, 'Noon')
-      .setCharacteristic(this.platform.Characteristic.ConfiguredName, 'Noon')
-      .getCharacteristic(this.platform.Characteristic.MotionDetected)
+      .setCharacteristic(this.platform.api.hap.Characteristic.Name, 'Noon')
+      .setCharacteristic(this.platform.api.hap.Characteristic.ConfiguredName, 'Noon')
+      .getCharacteristic(this.platform.api.hap.Characteristic.MotionDetected)
       .onGet(this.handleNoonMotionDetectedGet.bind(this))
 
     this.serviceGoldenHour
-      .setCharacteristic(this.platform.Characteristic.Name, 'GoldenHour')
-      .setCharacteristic(this.platform.Characteristic.ConfiguredName, 'GoldenHour')
-      .getCharacteristic(this.platform.Characteristic.MotionDetected)
+      .setCharacteristic(this.platform.api.hap.Characteristic.Name, 'GoldenHour')
+      .setCharacteristic(this.platform.api.hap.Characteristic.ConfiguredName, 'GoldenHour')
+      .getCharacteristic(this.platform.api.hap.Characteristic.MotionDetected)
       .onGet(this.handleGoldenHourMotionDetectedGet.bind(this))
 
     this.serviceDawn
-      .setCharacteristic(this.platform.Characteristic.Name, 'Dawn')
-      .setCharacteristic(this.platform.Characteristic.ConfiguredName, 'Dawn')
-      .getCharacteristic(this.platform.Characteristic.MotionDetected)
+      .setCharacteristic(this.platform.api.hap.Characteristic.Name, 'Dawn')
+      .setCharacteristic(this.platform.api.hap.Characteristic.ConfiguredName, 'Dawn')
+      .getCharacteristic(this.platform.api.hap.Characteristic.MotionDetected)
       .onGet(this.handleDawnMotionDetectedGet.bind(this))
 
     this.serviceDusk
-      .setCharacteristic(this.platform.Characteristic.Name, 'Dusk')
-      .setCharacteristic(this.platform.Characteristic.ConfiguredName, 'Dusk')
-      .getCharacteristic(this.platform.Characteristic.MotionDetected)
+      .setCharacteristic(this.platform.api.hap.Characteristic.Name, 'Dusk')
+      .setCharacteristic(this.platform.api.hap.Characteristic.ConfiguredName, 'Dusk')
+      .getCharacteristic(this.platform.api.hap.Characteristic.MotionDetected)
       .onGet(this.handleDuskMotionDetectedGet.bind(this))
 
 
@@ -149,7 +149,7 @@ export class SolarAccessory {
     const update = () => {
       this.update()
     }
-    setTimeout(update, 1000)
+    setInterval(update, 3 * 1000)
   }
 
   loadApiValues(): void {
@@ -161,6 +161,7 @@ export class SolarAccessory {
 
             const response = await res.json()
             if (response.results) {
+              this.platform.log.success(`loadApiValues() -- Response`, response.results)
               this.api_values = response.results as IApiResponse
             }
             this.update()
@@ -196,7 +197,7 @@ export class SolarAccessory {
    * the responsiveness of your device in the Home app.
 
    * @example
-   * this.service.updateCharacteristic(this.platform.Characteristic.On, true)
+   * this.service.updateCharacteristic(this.platform.api.hap.Characteristic.On, true)
    */
   async getOn(): Promise<CharacteristicValue> {
     // implement your own code to check if the device is on
@@ -212,129 +213,51 @@ export class SolarAccessory {
 
   // update sensors based on API result
   update(): void {
+    const start = performance.now()
+    this.platform.log.debug('SolarAccessory.update() -- start')
     this.currentTime = new Date().getTime()
 
     if (this.exampleStates.On) {
+      this.platform.log.debug('SolarAccessory.update() -- this.exampleStates.On: true')
       // this.platform.log.debug('SolarAccessory.update()')
       if (this.api_values) {
+        this.platform.log.debug('SolarAccessory.update() -- api_values is defined', this.api_values.dawn)
         if (this.api_values.date !== new Date().toISOString().substring(0, 10)) {
           this.platform.log.info('Date has changed, request new info from api!')
         }
-        this.checkSunrise()
-        this.checkSunset()
-        this.checkNoon()
-        this.checkGoldenHour()
-        this.checkDawn()
-        this.checkDusk()
+        this.platform.log.debug('SolarAccessory.checkDetection() -- start')
+
+        this.checkDetection(this.isSunrise, this.sunriseDetected)
+        this.checkDetection(this.isSunset, this.sunsetDetected)
+        this.checkDetection(this.isNoon, this.noonDetected)
+        this.checkDetection(this.isGoldenHour, this.goldenHourDetected)
+        this.checkDetection(this.isDawn, this.dawnDetected)
+        this.checkDetection(this.isDusk, this.duskDetected)
+
+        this.platform.log.debug('SolarAccessory.checkDetection() -- end')
         // this.serviceSunrise.setCharacteristic()
       } else {
         this.platform.log.error('SolarAccessory.update() -- api_values is undefined!')
       }
     } else {
+      this.platform.log.debug('SolarAccessory.update() -- this.exampleStates.On: false')
       this.platform.log.info('SolarAccessory.update() -- disabled')
     }
+    this.platform.log.debug('SolarAccessory.update() -- end', performance.now() - start)
   }
 
-  checkSunrise() {
-    let local = this.isSunrise
-    let detected = this.sunriseDetected
-
-    if (local === undefined) {
-      local = detected
+  checkDetection(currentState: boolean, targetState: boolean): boolean {
+    if (currentState === undefined) {
+      currentState = targetState
     }
 
-    if (local !== detected) {
-      this.platform.log.info('Sunrise Detected')
-      this.serviceSunrise.setCharacteristic(this.platform.Characteristic.MotionDetected, detected ? 1 : 0)
-      local = detected
+    if (currentState !== targetState) {
+      this.platform.log.info('currentState must change; targetState: ' + targetState)
+      this.serviceSunrise.setCharacteristic(this.platform.api.hap.Characteristic.MotionDetected, targetState ? 1 : 0)
+      currentState = targetState
     }
 
-    this.isSunrise = local
-  }
-
-  checkSunset() {
-    let local = this.isSunset
-    let detected = this.sunsetDetected
-
-    if (local === undefined) {
-      local = detected
-    }
-
-    if (local !== detected) {
-      this.platform.log.info('Sunset Detected')
-      this.serviceSunset.setCharacteristic(this.platform.Characteristic.MotionDetected, detected ? 1 : 0)
-      local = detected
-    }
-
-    this.isSunset = local
-  }
-
-  checkNoon() {
-    let local = this.isNoon
-    let detected = this.noonDetected
-
-    if (local === undefined) {
-      local = detected
-    }
-
-    if (local !== detected) {
-      this.platform.log.info('Noon Detected')
-      this.serviceNoon.setCharacteristic(this.platform.Characteristic.MotionDetected, detected ? 1 : 0)
-      local = detected
-    }
-
-    this.isNoon = local
-  }
-
-  checkGoldenHour() {
-    let local = this.isGoldenHour
-    let detected = this.goldenHourDetected
-
-    if (local === undefined) {
-      local = detected
-    }
-
-    if (local !== detected) {
-      this.platform.log.info('GoldenHour Detected')
-      this.serviceGoldenHour.setCharacteristic(this.platform.Characteristic.MotionDetected, detected ? 1 : 0)
-      local = detected
-    }
-
-    this.isGoldenHour = local
-  }
-
-  checkDawn() {
-    let local = this.isDawn
-    let detected = this.dawnDetected
-
-    if (local === undefined) {
-      local = detected
-    }
-
-    if (local !== detected) {
-      this.platform.log.info('Dawn Detected')
-      this.serviceDawn.setCharacteristic(this.platform.Characteristic.MotionDetected, detected ? 1 : 0)
-      local = detected
-    }
-
-    this.isDawn = local
-  }
-
-  checkDusk() {
-    let local = this.isDusk
-    let detected = this.duskDetected
-
-    if (local === undefined) {
-      local = detected
-    }
-
-    if (local !== detected) {
-      this.platform.log.info('Dusk Detected')
-      this.serviceDusk.setCharacteristic(this.platform.Characteristic.MotionDetected, detected ? 1 : 0)
-      local = detected
-    }
-
-    this.isDusk = local
+    return currentState
   }
 
   handleSunriseMotionDetectedGet() {
@@ -368,7 +291,7 @@ export class SolarAccessory {
       const time: number = new Date(`${this.api_values.date}T${this.api_values.sunrise}.000`).getTime()
 
       detected = this.currentTime > time - SHORT_SPREAD && this.currentTime < time + SHORT_SPREAD
-      this.platform.log.info(`sunriseDetected() -- ${detected}`)
+      this.platform.log.debug(`sunriseDetected() -- ${detected}`)
     }
 
     return detected
@@ -381,7 +304,7 @@ export class SolarAccessory {
       const time: number = new Date(`${this.api_values.date}T${this.api_values.sunset}.000`).getTime()
 
       detected = this.currentTime > time - SHORT_SPREAD && this.currentTime < time + SHORT_SPREAD
-      this.platform.log.info(`sunsetDetected() -- ${detected}`)
+      this.platform.log.debug(`sunsetDetected() -- ${detected}`)
     }
 
     return detected
@@ -394,7 +317,7 @@ export class SolarAccessory {
       const time: number = new Date(`${this.api_values.date}T${this.api_values.solar_noon}.000`).getTime()
 
       detected = this.currentTime > time - LONG_SPREAD && this.currentTime < time + LONG_SPREAD
-      this.platform.log.info(`noonDetected() -- ${detected}`)
+      this.platform.log.debug(`noonDetected() -- ${detected}`)
     }
 
     return detected
@@ -407,7 +330,7 @@ export class SolarAccessory {
       const time: number = new Date(`${this.api_values.date}T${this.api_values.golden_hour}.000`).getTime()
 
       detected = this.currentTime > time - TIME_SPREAD && this.currentTime < time + TIME_SPREAD
-      this.platform.log.info(`goldenHourDetected() -- ${detected}`)
+      this.platform.log.debug(`goldenHourDetected() -- ${detected}`)
     }
 
     return detected
@@ -420,7 +343,7 @@ export class SolarAccessory {
       const time: number = new Date(`${this.api_values.date}T${this.api_values.dawn}.000`).getTime()
 
       detected = this.currentTime > time - TIME_SPREAD && this.currentTime < time + TIME_SPREAD
-      this.platform.log.info(`dawnDetected() --  ${detected}`)
+      this.platform.log.debug(`dawnDetected() --  ${detected}`)
     }
 
     return detected
@@ -433,7 +356,7 @@ export class SolarAccessory {
       const time: number = new Date(`${this.api_values.date}T${this.api_values.dusk}.000`).getTime()
 
       detected = this.currentTime > time - TIME_SPREAD && this.currentTime < time + TIME_SPREAD
-      this.platform.log.info(`duskDetected() --  ${detected}`)
+      this.platform.log.debug(`duskDetected() --  ${detected}`)
     }
 
     return detected

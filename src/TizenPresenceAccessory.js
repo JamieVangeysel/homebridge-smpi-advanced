@@ -15,20 +15,20 @@ class TizenPresenceAccessory {
         this.isOccupied = false;
         // set accessory information
         this.accessory.getService(this.platform.Service.AccessoryInformation)
-            .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Samsung')
-            .setCharacteristic(this.platform.Characteristic.Model, config.type)
-            .setCharacteristic(this.platform.Characteristic.SerialNumber, config.ip);
+            .setCharacteristic(this.platform.api.hap.Characteristic.Manufacturer, 'Samsung')
+            .setCharacteristic(this.platform.api.hap.Characteristic.Model, config.type)
+            .setCharacteristic(this.platform.api.hap.Characteristic.SerialNumber, config.ip);
         // get the OccupancySensor service if it exists, otherwise create a new OccupancySensor service
         // you can create multiple services for each accessory
         this.service = this.accessory.getService(this.platform.Service.OccupancySensor)
             || this.accessory.addService(this.platform.Service.OccupancySensor);
         // set the service name, this is what is displayed as the default name on the Home app
         // in this example we are using the name we stored in the `accessory.context` in the `discoverDevices` method.
-        this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.exampleDisplayName);
+        this.service.setCharacteristic(this.platform.api.hap.Characteristic.Name, accessory.context.device.exampleDisplayName);
         // each service must implement at-minimum the "required characteristics" for the given service type
         // see https://developers.homebridge.io/#/service/OccupancySensor
         // register handlers for the On/Off Characteristic
-        this.service.getCharacteristic(this.platform.Characteristic.OccupancyDetected)
+        this.service.getCharacteristic(this.platform.api.hap.Characteristic.OccupancyDetected)
             .on('get', this.handleOccupancyDetectedGet.bind(this)); // GET - bind to the `handleOccupancyDetectedGet` method below
         /**
          * Updating characteristics values asynchronously.
@@ -70,9 +70,9 @@ class TizenPresenceAccessory {
                 if (updateInfo) {
                     // set accessory information
                     this.accessory.getService(this.platform.Service.AccessoryInformation)
-                        .setCharacteristic(this.platform.Characteristic.Manufacturer, response.device.type)
-                        .setCharacteristic(this.platform.Characteristic.Model, response.device.modelName)
-                        .setCharacteristic(this.platform.Characteristic.SerialNumber, response.device.id.substring(5));
+                        .setCharacteristic(this.platform.api.hap.Characteristic.Manufacturer, response.device.type)
+                        .setCharacteristic(this.platform.api.hap.Characteristic.Model, response.device.modelName)
+                        .setCharacteristic(this.platform.api.hap.Characteristic.SerialNumber, response.device.id.substring(5));
                 }
             }
             else {
@@ -82,7 +82,7 @@ class TizenPresenceAccessory {
         catch (err) {
             // this.platform.log.warn(`Could not get powerOn data from 'http://${this.config.ip}:8001/api/v2/'.`);
         }
-        this.service.updateCharacteristic(this.platform.Characteristic.OccupancyDetected, isOccupied);
+        this.service.updateCharacteristic(this.platform.api.hap.Characteristic.OccupancyDetected, isOccupied);
         // return the actual result te avoid always off
         return isOccupied;
     }

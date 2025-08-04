@@ -11,21 +11,21 @@ class SwitchAccessory {
         this.config = config;
         // set accessory information
         this.accessory.getService(this.platform.Service.AccessoryInformation)
-            .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Simplintho')
-            .setCharacteristic(this.platform.Characteristic.Model, config.type === 'statefull' ? 'Stetefull Switch' : 'Simplintho Neo Plug')
-            .setCharacteristic(this.platform.Characteristic.FirmwareRevision, '1.0')
-            .setCharacteristic(this.platform.Characteristic.SerialNumber, (_a = config.ip) !== null && _a !== void 0 ? _a : 'unknown');
+            .setCharacteristic(this.platform.api.hap.Characteristic.Manufacturer, 'Simplintho')
+            .setCharacteristic(this.platform.api.hap.Characteristic.Model, config.type === 'statefull' ? 'Stetefull Switch' : 'Simplintho Neo Plug')
+            .setCharacteristic(this.platform.api.hap.Characteristic.FirmwareRevision, '1.0')
+            .setCharacteristic(this.platform.api.hap.Characteristic.SerialNumber, (_a = config.ip) !== null && _a !== void 0 ? _a : 'unknown');
         // get the Switch service if it exists, otherwise create a new Switch service
         // you can create multiple services for each accessory
         this.service = this.accessory.getService(this.platform.Service.Switch)
             || this.accessory.addService(this.platform.Service.Switch);
         // set the service name, this is what is displayed as the default name on the Home app
         // in this example we are using the name we stored in the `accessory.context` in the `discoverDevices` method.
-        this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.exampleDisplayName);
+        this.service.setCharacteristic(this.platform.api.hap.Characteristic.Name, accessory.context.device.exampleDisplayName);
         // each service must implement at-minimum the "required characteristics" for the given service type
         // see https://developers.homebridge.io/#/service/Switch
         // create handlers for required characteristics
-        this.service.getCharacteristic(this.platform.Characteristic.On)
+        this.service.getCharacteristic(this.platform.api.hap.Characteristic.On)
             .on('get', this.handleOnGet.bind(this))
             .on('set', this.handleOnSet.bind(this));
         this.initializeStatus();
@@ -35,10 +35,10 @@ class SwitchAccessory {
             (0, cross_fetch_1.fetch)(this.config.stateUrl).then(response => {
                 response.json().then(result => {
                     if (result.status === true) {
-                        this.service.setCharacteristic(this.platform.Characteristic.On, true);
+                        this.service.setCharacteristic(this.platform.api.hap.Characteristic.On, true);
                     }
                     else {
-                        this.service.setCharacteristic(this.platform.Characteristic.On, false);
+                        this.service.setCharacteristic(this.platform.api.hap.Characteristic.On, false);
                     }
                 }).catch(() => {
                     this.platform.log.error(`Error while parsing data from '${this.config.stateUrl}' to json.`);
@@ -53,18 +53,18 @@ class SwitchAccessory {
                 switch (this.config.definition.type) {
                     case 'dayOfTheWeek':
                         if (this.config.definition.day === date.getDay()) {
-                            this.service.setCharacteristic(this.platform.Characteristic.On, true);
+                            this.service.setCharacteristic(this.platform.api.hap.Characteristic.On, true);
                         }
                         else {
-                            this.service.setCharacteristic(this.platform.Characteristic.On, false);
+                            this.service.setCharacteristic(this.platform.api.hap.Characteristic.On, false);
                         }
                         break;
                     case 'dayOfTheWeekGroup':
                         if (this.config.definition.days.indexOf(date.getDay()) > -1) {
-                            this.service.setCharacteristic(this.platform.Characteristic.On, true);
+                            this.service.setCharacteristic(this.platform.api.hap.Characteristic.On, true);
                         }
                         else {
-                            this.service.setCharacteristic(this.platform.Characteristic.On, false);
+                            this.service.setCharacteristic(this.platform.api.hap.Characteristic.On, false);
                         }
                         break;
                 }

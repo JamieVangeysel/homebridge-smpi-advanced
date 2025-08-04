@@ -14,8 +14,8 @@
     "email": "vangeysel-jamie@hotmail.com"
   },
   "engines": {
-    "node": ">=10.17.0",
-    "homebridge": ">=1.0.0"
+    "homebridge": "^1.6.0 || ^2.0.0-beta.0",
+    "node": "^18.20.4 || ^20.15.1 || ^22"
   },
   "main": "index.min.js",
   "scripts": {
@@ -25,7 +25,18 @@
     "prepublishOnly": "npm run build"
   },
   "keywords": [
-    "homebridge-plugin"
+    "homebridge-plugin",
+    "homebridge",
+    "neo",
+    "homekit",
+    "restfull",
+    "smart-home",
+    "weather",
+    "climate",
+    "home-automation",
+    "temperature",
+    "humidity",
+    "solar-events"
   ],
   "dependencies": {
     "cross-fetch": "^3.1.4",

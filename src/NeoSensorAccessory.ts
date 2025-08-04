@@ -23,10 +23,10 @@ export class NeoSensorAccessory {
     // set accessory information
     platform.log.warn('Setting op NeoSensorAccessory ' + config.name)
     this.accessory.getService(this.platform.Service.AccessoryInformation)
-      .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Simplintho')
-      .setCharacteristic(this.platform.Characteristic.Model, 'Simplintho Neo THP10')
-      .setCharacteristic(this.platform.Characteristic.FirmwareRevision, '0.0.0')
-      .setCharacteristic(this.platform.Characteristic.SerialNumber, config.uuid.substring(0, 12))
+      .setCharacteristic(this.platform.api.hap.Characteristic.Manufacturer, 'Simplintho')
+      .setCharacteristic(this.platform.api.hap.Characteristic.Model, 'Simplintho Neo THP10')
+      .setCharacteristic(this.platform.api.hap.Characteristic.FirmwareRevision, '0.0.0')
+      .setCharacteristic(this.platform.api.hap.Characteristic.SerialNumber, config.uuid.substring(0, 12))
     // get the TemperatureSensor service if it exists, otherwise create a new TemperatureSensor service
     // you can create multiple services for each accessory
     this.serviceTemperature = this.accessory.getService(this.platform.Service.TemperatureSensor)
@@ -36,8 +36,8 @@ export class NeoSensorAccessory {
       || this.accessory.addService(this.platform.Service.HumiditySensor)
     // set the service name, this is what is displayed as the default name on the Home app
     // in this example we are using the name we stored in the `accessory.context` in the `discoverDevices` method.
-    this.serviceTemperature.setCharacteristic(this.platform.Characteristic.Name, config.name)
-    this.serviceHumidity.setCharacteristic(this.platform.Characteristic.Name, config.name)
+    this.serviceTemperature.setCharacteristic(this.platform.api.hap.Characteristic.Name, config.name)
+    this.serviceHumidity.setCharacteristic(this.platform.api.hap.Characteristic.Name, config.name)
     this.log = this.platform.log
     // this.loggingService = new FakeGatoHistoryService('weather', this, {
     //   storage: 'fs',
@@ -48,10 +48,10 @@ export class NeoSensorAccessory {
     // see https://developers.homebridge.io/#/service/HumiditySensor
     // see https://developers.homebridge.io/#/service/TemperatureSensor
     // create handlers for required characteristics
-    this.serviceTemperature.getCharacteristic(this.platform.Characteristic.CurrentTemperature)
+    this.serviceTemperature.getCharacteristic(this.platform.api.hap.Characteristic.CurrentTemperature)
       .on('get', this.handleCurrentTemperatureGet.bind(this))
     // create handlers for required characteristics
-    this.serviceHumidity.getCharacteristic(this.platform.Characteristic.CurrentRelativeHumidity)
+    this.serviceHumidity.getCharacteristic(this.platform.api.hap.Characteristic.CurrentRelativeHumidity)
       .on('get', this.handleCurrentRelativeHumidityGet.bind(this))
     /**
      * Updating characteristics values asynchronously.
@@ -66,7 +66,7 @@ export class NeoSensorAccessory {
     const update = () => {
       this.updateStatus()
     }
-    setInterval(update, 10000)
+    setInterval(update, 10 * 1000)
   }
 
   updateStatus(): void {
@@ -79,8 +79,8 @@ export class NeoSensorAccessory {
               this.temperature = response.data[0].temperature
               this.humidity = response.data[0].humidity ?? 0
 
-              this.serviceTemperature.updateCharacteristic(this.platform.Characteristic.CurrentTemperature, (this.heatIndex ?? this.temperature))
-              this.serviceHumidity.updateCharacteristic(this.platform.Characteristic.CurrentRelativeHumidity, this.humidity * 100)
+              this.serviceTemperature.updateCharacteristic(this.platform.api.hap.Characteristic.CurrentTemperature, (this.heatIndex ?? this.temperature))
+              this.serviceHumidity.updateCharacteristic(this.platform.api.hap.Characteristic.CurrentRelativeHumidity, this.humidity * 100)
               return
             }
           }
@@ -94,8 +94,8 @@ export class NeoSensorAccessory {
           //   pressure: 1024,
           //   humidity: this.humidity,
           // });
-          // this.serviceTemperature.updateCharacteristic(this.platform.Characteristic.CurrentTemperature, this.temperature)
-          // this.serviceHumidity.updateCharacteristic(this.platform.Characteristic.CurrentRelativeHumidity, this.humidity)
+          // this.serviceTemperature.updateCharacteristic(this.platform.api.hap.Characteristic.CurrentTemperature, this.temperature)
+          // this.serviceHumidity.updateCharacteristic(this.platform.api.hap.Characteristic.CurrentRelativeHumidity, this.humidity)
         } else {
           this.platform.log.error(`Could not retrieve values from api; [${res.status}]'${this.fetchUrl}'`)
         }

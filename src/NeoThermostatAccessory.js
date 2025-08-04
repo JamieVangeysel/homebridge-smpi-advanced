@@ -9,31 +9,31 @@ class NeoThermostatAccessory {
         this.config = config;
         // set accessory information
         this.accessory.getService(this.platform.Service.AccessoryInformation)
-            .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Simplintho')
-            .setCharacteristic(this.platform.Characteristic.Model, 'Simplintho Neo HVAC')
-            .setCharacteristic(this.platform.Characteristic.FirmwareRevision, '1.0')
-            .setCharacteristic(this.platform.Characteristic.SerialNumber, config.uuid);
+            .setCharacteristic(this.platform.api.hap.Characteristic.Manufacturer, 'Simplintho')
+            .setCharacteristic(this.platform.api.hap.Characteristic.Model, 'Simplintho Neo HVAC')
+            .setCharacteristic(this.platform.api.hap.Characteristic.FirmwareRevision, '1.0')
+            .setCharacteristic(this.platform.api.hap.Characteristic.SerialNumber, config.uuid);
         // get the Thermostat service if it exists, otherwise create a new Thermostat service
         // you can create multiple services for each accessory
         this.service = this.accessory.getService(this.platform.Service.Thermostat)
             || this.accessory.addService(this.platform.Service.Thermostat);
         // set the service name, this is what is displayed as the default name on the Home app
         // in this example we are using the name we stored in the `accessory.context` in the `discoverDevices` method.
-        this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.exampleDisplayName);
+        this.service.setCharacteristic(this.platform.api.hap.Characteristic.Name, accessory.context.device.exampleDisplayName);
         // each service must implement at-minimum the "required characteristics" for the given service type
         // see https://developers.homebridge.io/#/service/Thermostat
         // create handlers for required characteristics
-        this.service.getCharacteristic(this.platform.Characteristic.CurrentHeatingCoolingState)
+        this.service.getCharacteristic(this.platform.api.hap.Characteristic.CurrentHeatingCoolingState)
             .on('get', this.handleCurrentHeatingCoolingStateGet.bind(this));
-        this.service.getCharacteristic(this.platform.Characteristic.TargetHeatingCoolingState)
+        this.service.getCharacteristic(this.platform.api.hap.Characteristic.TargetHeatingCoolingState)
             .on('get', this.handleTargetHeatingCoolingStateGet.bind(this))
             .on('set', this.handleTargetHeatingCoolingStateSet.bind(this));
-        this.service.getCharacteristic(this.platform.Characteristic.CurrentTemperature)
+        this.service.getCharacteristic(this.platform.api.hap.Characteristic.CurrentTemperature)
             .on('get', this.handleCurrentTemperatureGet.bind(this));
-        this.service.getCharacteristic(this.platform.Characteristic.TargetTemperature)
+        this.service.getCharacteristic(this.platform.api.hap.Characteristic.TargetTemperature)
             .on('get', this.handleTargetTemperatureGet.bind(this))
             .on('set', this.handleTargetTemperatureSet.bind(this));
-        this.service.getCharacteristic(this.platform.Characteristic.TemperatureDisplayUnits)
+        this.service.getCharacteristic(this.platform.api.hap.Characteristic.TemperatureDisplayUnits)
             .on('get', this.handleTemperatureDisplayUnitsGet.bind(this))
             .on('set', this.handleTemperatureDisplayUnitsSet.bind(this));
     }
