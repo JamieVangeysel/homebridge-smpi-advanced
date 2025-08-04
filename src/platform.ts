@@ -140,14 +140,13 @@ export interface IPlatformConfig extends Record<string, unknown> {
   motionDetectors: IMotionDetector[];
   neoSensors: INeoTemperatureSensor[];
   thermostats: INeoThermostat[];
-  switches: IPlug[];
   securitySystems: ISecuritySystem[];
 }
 
 export interface IPresenceDetector {
   ip: string;
   name: string;
-  type: 'Samsung SmartTV';
+  model?: string | undefined
 }
 
 export interface IMotionDetector {
@@ -166,27 +165,6 @@ export interface INeoThermostat {
   name: string;
   uuid: string;
   ip: string;
-}
-
-export interface IPlug {
-  name: string;
-  type: 'ip' | 'http' | 'statefull';
-  ip?: string;
-  onUrl?: string;
-  offUrl?: string;
-  stateUrl?: string;
-  custom?: boolean;
-  definition: IDayOfTheWeekDefinition | IDayOfTheWeekGroupDefinition;
-}
-
-export interface IDayOfTheWeekDefinition {
-  type: 'dayOfTheWeek';
-  day: number;
-}
-
-export interface IDayOfTheWeekGroupDefinition {
-  type: 'dayOfTheWeekGroup';
-  days: number[];
 }
 
 export interface ISecuritySystem {

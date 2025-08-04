@@ -1,5 +1,5 @@
-import { PlatformAccessory, CharacteristicGetCallback, Service, Logger, CharacteristicValue } from 'homebridge'
-import { HomebridgePlatform, INeoTemperatureSensor } from './platform'
+import { PlatformAccessory, Service, CharacteristicValue } from 'homebridge'
+import { HomebridgePlatform } from './platform'
 
 import fetch from 'cross-fetch'
 
@@ -57,7 +57,8 @@ export class SolarAccessory {
       .setCharacteristic(this.platform.api.hap.Characteristic.FirmwareRevision, '1.0.0')
       .setCharacteristic(this.platform.api.hap.Characteristic.SerialNumber, 'SERIAL NUMBER')
 
-    this.service = this.accessory.getService(this.platform.Service.Lightbulb) || this.accessory.addService(this.platform.Service.Lightbulb)
+    this.service = this.accessory.getService(this.platform.Service.Lightbulb)
+      || this.accessory.addService(this.platform.Service.Lightbulb)
 
     // set the service name, this is what is displayed as the default name on the Home app
     // in this example we are using the name we stored in the `accessory.context` in the `discoverDevices` method.
@@ -86,18 +87,12 @@ export class SolarAccessory {
     // this.accessory.removeService(this.accessory.getService('Sunrise'))
     // this.accessory.removeService(this.accessory.getService('Sunset'))
 
-    this.serviceSunrise = this.accessory.getService('Sunrise')
-      || this.accessory.addService(this.platform.Service.MotionSensor, 'Sunrise', 'Sunrise-motion')
-    this.serviceSunset = this.accessory.getService('Sunset')
-      || this.accessory.addService(this.platform.Service.MotionSensor, 'Sunset', 'Sunset-motion')
-    this.serviceNoon = this.accessory.getService('Noon')
-      || this.accessory.addService(this.platform.Service.MotionSensor, 'Noon', 'Noon-motion')
-    this.serviceGoldenHour = this.accessory.getService('GoldenHour')
-      || this.accessory.addService(this.platform.Service.MotionSensor, 'GoldenHour', 'GoldenHour-motion')
-    this.serviceDawn = this.accessory.getService('Dawn')
-      || this.accessory.addService(this.platform.Service.MotionSensor, 'Dawn', 'Dawn-motion')
-    this.serviceDusk = this.accessory.getService('Dusk')
-      || this.accessory.addService(this.platform.Service.MotionSensor, 'Dusk', 'Dusk-motion')
+    this.serviceSunrise = this.accessory.getService('Sunrise') || this.accessory.addService(this.platform.Service.MotionSensor, 'Sunrise', 'Sunrise-motion')
+    this.serviceSunset = this.accessory.getService('Sunset') || this.accessory.addService(this.platform.Service.MotionSensor, 'Sunset', 'Sunset-motion')
+    this.serviceNoon = this.accessory.getService('Noon') || this.accessory.addService(this.platform.Service.MotionSensor, 'Noon', 'Noon-motion')
+    this.serviceGoldenHour = this.accessory.getService('GoldenHour') || this.accessory.addService(this.platform.Service.MotionSensor, 'GoldenHour', 'GoldenHour-motion')
+    this.serviceDawn = this.accessory.getService('Dawn') || this.accessory.addService(this.platform.Service.MotionSensor, 'Dawn', 'Dawn-motion')
+    this.serviceDusk = this.accessory.getService('Dusk') || this.accessory.addService(this.platform.Service.MotionSensor, 'Dusk', 'Dusk-motion')
 
     this.serviceSunrise
       .setCharacteristic(this.platform.api.hap.Characteristic.Name, 'Sunrise')
@@ -134,7 +129,6 @@ export class SolarAccessory {
       .getCharacteristic(this.platform.api.hap.Characteristic.MotionDetected)
       .onGet(this.handleDuskMotionDetectedGet.bind(this))
 
-
     this.loadApiValues()
 
     /**
@@ -154,22 +148,26 @@ export class SolarAccessory {
 
   loadApiValues(): void {
     if (this.exampleStates.On) {
-      fetch(this.apiUrl)
-        .then(async (res) => {
-          if (res.status === 200) {
-            this.platform.log.success(`loadApiValues() -- Received status OK from api.sunrisesunset.io`)
+      const handleSuccess: (res: Response) => Promise<void> = async (res: Response): Promise<void> => {
+        if (res.status === 200) {
+          this.platform.log.success(`loadApiValues() -- Received status OK from api.sunrisesunset.io`)
 
-            const response = await res.json()
-            if (response.results) {
-              this.platform.log.success(`loadApiValues() -- Response`, response.results)
-              this.api_values = response.results as IApiResponse
-            }
-            this.update()
+          const response = await res.json()
+          if (response.results) {
+            this.platform.log.success(`loadApiValues() -- Response`, response.results)
+            this.api_values = response.results as IApiResponse
           }
-        })
-        .catch(error => {
-          this.platform.log.error('loadApiValues() -- error', error)
-        })
+          this.update()
+        }
+      }
+
+      const handleCatch = (error: any): void => {
+        this.platform.log.error('loadApiValues() -- error', error)
+      }
+
+      fetch(this.apiUrl)
+        .then(handleSuccess)
+        .catch(handleCatch)
     }
   }
 

@@ -123,49 +123,6 @@
           }
         }
       },
-      "switches": {
-        "title": "Neo Switches",
-        "type": "array",
-        "items": {
-          "title": "Plug",
-          "type": "object",
-          "properties": {
-            "name": {
-              "title": "Plug name",
-              "type": "string",
-              "required": true,
-              "default": ""
-            },
-            "type": {
-              "title": "Plug type (ip|http|statefull)",
-              "type": "string",
-              "required": true,
-              "default": ""
-            },
-            "ip": {
-              "title": "Plug IP",
-              "type": "string",
-              "required": false,
-              "default": ""
-            },
-            "onUrl": {
-              "title": "On URL location",
-              "type": "string",
-              "required": false
-            },
-            "offUrl": {
-              "title": "Off URL location",
-              "type": "string",
-              "required": false
-            },
-            "statefUrl": {
-              "title": "Status URL location",
-              "type": "string",
-              "required": false
-            }
-          }
-        }
-      },
       "securitySystems": {
         "title": "Security Systems using HTTP",
         "type": "array",
