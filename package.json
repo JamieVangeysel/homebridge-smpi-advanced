@@ -21,7 +21,7 @@
   "scripts": {
     "lint": "eslint src/**.ts --max-warnings=0 npm run lint && ",
     "watch": "npm run build && npm link && nodemon",
-    "build": "esbuild ./src//index.ts --bundle --platform=node --minify --packages=external --external:'./config' --outfile=index.min.js",
+    "build": "esbuild ./src/index.ts --bundle --platform=node --minify --packages=external --external:'./config' --outfile=index.min.js",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
