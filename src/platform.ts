@@ -10,6 +10,7 @@ import {
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings'
 import { NeoSensorAccessory } from './NeoSensorAccessory'
 import { SolarAccessory } from './SolarAccessory'
+import { ThermostatAccessory } from './ThermostatAccessory'
 
 export class HomebridgePlatform implements DynamicPlatformPlugin {
   readonly log: Logger
@@ -60,65 +61,12 @@ export class HomebridgePlatform implements DynamicPlatformPlugin {
    * must not be registered again to prevent "duplicate UUID" errors.
    */
   discoverDevices(): void {
-    const config = this.config
+    const config: IPlatformConfig = this.config as IPlatformConfig
 
-    for (const device of config.neoSensors) {
-      // generate a unique id for the accessory this should be generated from
-      // something globally unique, but constant, for example, the device serial
-      // number or MAC address (using url, should be constant!)
-      const uuid = this.api.hap.uuid.generate(device.uuid)
-      this.foundAccessoires.push(uuid)
-      // see if an accessory with the same uuid has already been registered and restored from
-      // the cached devices we stored in the `configureAccessory` method above
-      const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid)
-      if (existingAccessory) {
-        // the accessory already exists
-        if (device) {
-          this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName)
-          // if you need to update the accessory.context then you should run `api.updatePlatformAccessories`. eg.:
-          // existingAccessory.context.device = device;
-          // this.api.updatePlatformAccessories([existingAccessory]);
-          new NeoSensorAccessory(this, existingAccessory, device)
-        } else if (!device) {
-          // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
-          // remove platform accessories when no longer present
-          this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [existingAccessory])
-          this.log.info('Removing existing accessory from cache:', existingAccessory.displayName)
-        }
-      } else {
-        // the accessory does not yet exist, so we need to create it
-        this.log.info('Adding new accessory:', device.name)
-        // create a new accessory
-        const accessory = new this.api.platformAccessory(device.name, uuid)
-        // store a copy of the device object in the `accessory.context`
-        // the `context` property can be used to store any data about the accessory you may need
-        accessory.context.device = device
-        new NeoSensorAccessory(this, accessory, device)
-        // link the accessory to your platform
-        this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory])
-      }
-    }
+    config.neoSensors.forEach(this.setupNeoSensor.bind(this))
+    config.thermostats.forEach(this.setupThermostat.bind(this))
 
-    const uuid = this.api.hap.uuid.generate('SunriseSunset')
-    this.foundAccessoires.push(uuid)
-    const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid)
-    if (existingAccessory) {
-      // the accessory already exists
-      this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName)
-      // if you need to update the accessory.context then you should run `api.updatePlatformAccessories`. eg.:
-      // existingAccessory.context.device = device;
-      // this.api.updatePlatformAccessories([existingAccessory]);
-      new SolarAccessory(this, existingAccessory)
-    } else {
-      // create a new accessory
-      const accessory = new this.api.platformAccessory('SunriseSunset', uuid)
-      // store a copy of the device object in the `accessory.context`
-      // the `context` property can be used to store any data about the accessory you may need
-      // accessory.context.device = device
-      new SolarAccessory(this, accessory)
-      // link the accessory to your platform
-      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory])
-    }
+    this.setupNeoSunriseSunset()
 
     // remove all accessories that were not found in config
     for (let accessory of this.accessories) {
@@ -131,6 +79,103 @@ export class HomebridgePlatform implements DynamicPlatformPlugin {
       }
     }
   }
+
+  setupNeoSensor(device: INeoTemperatureSensor): void {
+    // generate a unique id for the accessory this should be generated from
+    // something globally unique, but constant, for example, the device serial
+    // number or MAC address (using url, should be constant!)
+    const uuid = this.api.hap.uuid.generate(device.uuid)
+    this.foundAccessoires.push(uuid)
+    let isUuid = (accessory: any) => accessory.UUID === uuid
+    // see if an accessory with the same uuid has already been registered and restored from
+    // the cached devices we stored in the `configureAccessory` method above
+    const existingAccessory = this.accessories.find(isUuid)
+    if (existingAccessory) {
+      // the accessory already exists
+      if (device) {
+        this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName)
+        // if you need to update the accessory.context then you should run `api.updatePlatformAccessories`. eg.:
+        // existingAccessory.context.device = device;
+        // this.api.updatePlatformAccessories([existingAccessory]);
+        const a = new NeoSensorAccessory(this, existingAccessory, device)
+      } else if (!device) {
+        // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
+        // remove platform accessories when no longer present
+        this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [existingAccessory])
+        this.log.info('Removing existing accessory from cache:', existingAccessory.displayName)
+      }
+    } else {
+      // the accessory does not yet exist, so we need to create it
+      this.log.info('Adding new accessory:', device.name)
+      // create a new accessory
+      const accessory = new this.api.platformAccessory(device.name, uuid)
+      // store a copy of the device object in the `accessory.context`
+      // the `context` property can be used to store any data about the accessory you may need
+      accessory.context.device = device
+      const a = new NeoSensorAccessory(this, accessory, device)
+      // link the accessory to your platform
+      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory])
+    }
+  }
+
+  setupThermostat(device: IThermostat): void {
+    const uuid = this.api.hap.uuid.generate(`${device.host}-${device.instance ?? 'default'}`)
+    this.foundAccessoires.push(uuid)
+    let isUuid = (accessory: any) => accessory.UUID === uuid
+    // see if an accessory with the same uuid has already been registered and restored from
+    // the cached devices we stored in the `configureAccessory` method above
+    const existingAccessory = this.accessories.find(isUuid)
+    if (existingAccessory) {
+      // the accessory already exists
+      if (device) {
+        this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName)
+        // if you need to update the accessory.context then you should run `api.updatePlatformAccessories`. eg.:
+        // existingAccessory.context.device = device;
+        // this.api.updatePlatformAccessories([existingAccessory]);
+        const t = new ThermostatAccessory(this, existingAccessory, device)
+      } else if (!device) {
+        // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
+        // remove platform accessories when no longer present
+        this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [existingAccessory])
+        this.log.info('Removing existing accessory from cache:', existingAccessory.displayName)
+      }
+    } else {
+      // the accessory does not yet exist, so we need to create it
+      this.log.info('Adding new accessory:', device.name)
+      // create a new accessory
+      const accessory = new this.api.platformAccessory(device.name, uuid)
+      // store a copy of the device object in the `accessory.context`
+      // the `context` property can be used to store any data about the accessory you may need
+      accessory.context.device = device
+      const t = new ThermostatAccessory(this, accessory, device)
+      // link the accessory to your platform
+      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory])
+    }
+  }
+
+  setupNeoSunriseSunset() {
+    const uuid = this.api.hap.uuid.generate('SunriseSunset')
+    this.foundAccessoires.push(uuid)
+    let isUuid = (accessory: any) => accessory.UUID === uuid
+    const existingAccessory = this.accessories.find(isUuid)
+    if (existingAccessory) {
+      // the accessory already exists
+      this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName)
+      // if you need to update the accessory.context then you should run `api.updatePlatformAccessories`. eg.:
+      // existingAccessory.context.device = device;
+      // this.api.updatePlatformAccessories([existingAccessory]);
+      const a = new SolarAccessory(this, existingAccessory)
+    } else {
+      // create a new accessory
+      const accessory = new this.api.platformAccessory('SunriseSunset', uuid)
+      // store a copy of the device object in the `accessory.context`
+      // the `context` property can be used to store any data about the accessory you may need
+      // accessory.context.device = device
+      const a = new SolarAccessory(this, accessory)
+      // link the accessory to your platform
+      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory])
+    }
+  }
 }
 
 export interface IPlatformConfig extends Record<string, unknown> {
@@ -139,7 +184,7 @@ export interface IPlatformConfig extends Record<string, unknown> {
   presenceDetectors: IPresenceDetector[];
   motionDetectors: IMotionDetector[];
   neoSensors: INeoTemperatureSensor[];
-  thermostats: INeoThermostat[];
+  thermostats: IThermostat[];
   securitySystems: ISecuritySystem[];
 }
 
@@ -161,10 +206,11 @@ export interface INeoTemperatureSensor {
   name: string;
 }
 
-export interface INeoThermostat {
-  name: string;
-  uuid: string;
-  ip: string;
+export interface IThermostat {
+  name: string
+  port: number
+  instance?: string
+  host: string
 }
 
 export interface ISecuritySystem {

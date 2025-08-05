@@ -46,13 +46,15 @@ export class TizenPresenceAccessory {
      */
     this.updateStatus(true)
 
-    setInterval(async () => {
+    const update = async (): Promise<void> => {
       const value = await this.updateStatus()
       if (value !== this.isOccupied) {
         this.isOccupied = value
         this.platform.log.debug('Triggering motionSensorOneService:', this.isOccupied)
       }
-    }, 2000)
+    }
+
+    setInterval(update, 2000)
   }
 
   async updateStatus(updateInfo = false) {
@@ -67,12 +69,7 @@ export class TizenPresenceAccessory {
       if (isAlive) {
         const r = await fetch(`http://${this.config.ip}:8001/api/v2/`)
         const response = await r.json()
-        if (response.device.PowerState === 'on') {
-          isOccupied = true
-        } else {
-          // fix wont turn off after initial value has been set
-          isOccupied = false
-        }
+        isOccupied = response.device.PowerState === 'on'
         if (updateInfo) {
           // set accessory information
           this.accessory.getService(this.platform.Service.AccessoryInformation)

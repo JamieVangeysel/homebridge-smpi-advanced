@@ -98,36 +98,36 @@ export class SolarAccessory {
       .setCharacteristic(this.platform.api.hap.Characteristic.Name, 'Sunrise')
       .setCharacteristic(this.platform.api.hap.Characteristic.ConfiguredName, 'Sunrise')
       .getCharacteristic(this.platform.api.hap.Characteristic.MotionDetected)
-      .onGet(this.handleSunriseMotionDetectedGet.bind(this))
+      .onGet(_ => this.isSunrise ? 1 : 0)
     this.serviceSunset
       .setCharacteristic(this.platform.api.hap.Characteristic.Name, 'Sunset')
       .setCharacteristic(this.platform.api.hap.Characteristic.ConfiguredName, 'Sunset')
       .getCharacteristic(this.platform.api.hap.Characteristic.MotionDetected)
-      .onGet(this.handleSunsetMotionDetectedGet.bind(this))
+      .onGet(_ => this.isSunset ? 1 : 0)
 
     this.serviceNoon
       .setCharacteristic(this.platform.api.hap.Characteristic.Name, 'Noon')
       .setCharacteristic(this.platform.api.hap.Characteristic.ConfiguredName, 'Noon')
       .getCharacteristic(this.platform.api.hap.Characteristic.MotionDetected)
-      .onGet(this.handleNoonMotionDetectedGet.bind(this))
+      .onGet(_ => this.isNoon ? 1 : 0)
 
     this.serviceGoldenHour
       .setCharacteristic(this.platform.api.hap.Characteristic.Name, 'GoldenHour')
       .setCharacteristic(this.platform.api.hap.Characteristic.ConfiguredName, 'GoldenHour')
       .getCharacteristic(this.platform.api.hap.Characteristic.MotionDetected)
-      .onGet(this.handleGoldenHourMotionDetectedGet.bind(this))
+      .onGet(_ => this.isGoldenHour ? 1 : 0)
 
     this.serviceDawn
       .setCharacteristic(this.platform.api.hap.Characteristic.Name, 'Dawn')
       .setCharacteristic(this.platform.api.hap.Characteristic.ConfiguredName, 'Dawn')
       .getCharacteristic(this.platform.api.hap.Characteristic.MotionDetected)
-      .onGet(this.handleDawnMotionDetectedGet.bind(this))
+      .onGet(_ => this.isDawn ? 1 : 0)
 
     this.serviceDusk
       .setCharacteristic(this.platform.api.hap.Characteristic.Name, 'Dusk')
       .setCharacteristic(this.platform.api.hap.Characteristic.ConfiguredName, 'Dusk')
       .getCharacteristic(this.platform.api.hap.Characteristic.MotionDetected)
-      .onGet(this.handleDuskMotionDetectedGet.bind(this))
+      .onGet(_ => this.isDusk ? 1 : 0)
 
     this.loadApiValues()
 
@@ -150,11 +150,11 @@ export class SolarAccessory {
     if (this.exampleStates.On) {
       const handleSuccess: (res: Response) => Promise<void> = async (res: Response): Promise<void> => {
         if (res.status === 200) {
-          this.platform.log.success(`loadApiValues() -- Received status OK from api.sunrisesunset.io`)
+          this.platform.log.info(`loadApiValues() -- Received status OK from api.sunrisesunset.io`)
 
           const response = await res.json()
           if (response.results) {
-            this.platform.log.success(`loadApiValues() -- Response`, response.results)
+            this.platform.log.info(`loadApiValues() -- Response`, response.results)
             this.api_values = response.results as IApiResponse
           }
           this.update()
@@ -222,6 +222,7 @@ export class SolarAccessory {
         this.platform.log.debug('SolarAccessory.update() -- api_values is defined', this.api_values.dawn)
         if (this.api_values.date !== new Date().toISOString().substring(0, 10)) {
           this.platform.log.info('Date has changed, request new info from api!')
+          this.loadApiValues()
         }
         this.platform.log.debug('SolarAccessory.checkDetection() -- start')
 
@@ -256,30 +257,6 @@ export class SolarAccessory {
     }
 
     return currentState
-  }
-
-  handleSunriseMotionDetectedGet() {
-    return this.isSunrise ? 1 : 0
-  }
-
-  handleSunsetMotionDetectedGet() {
-    return this.isSunset ? 1 : 0
-  }
-
-  handleNoonMotionDetectedGet() {
-    return this.isNoon ? 1 : 0
-  }
-
-  handleGoldenHourMotionDetectedGet() {
-    return this.isGoldenHour ? 1 : 0
-  }
-
-  handleDawnMotionDetectedGet() {
-    return this.isDawn ? 1 : 0
-  }
-
-  handleDuskMotionDetectedGet() {
-    return this.isDusk ? 1 : 0
   }
 
   get sunriseDetected(): boolean {
