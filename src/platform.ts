@@ -64,7 +64,7 @@ export class HomebridgePlatform implements DynamicPlatformPlugin {
     const config: IPlatformConfig = this.config as IPlatformConfig
 
     config.neoSensors.forEach(this.setupNeoSensor.bind(this))
-    // config.thermostats.forEach(this.setupThermostat.bind(this))
+    config.thermostats.forEach(this.setupThermostat.bind(this))
 
     this.setupNeoSunriseSunset()
 

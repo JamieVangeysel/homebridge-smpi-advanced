@@ -1,6 +1,6 @@
 import fetch from 'cross-fetch'
 import { HomebridgePlatform, IThermostat } from './platform'
-import { PlatformAccessory, Service } from 'homebridge'
+import { CharacteristicGetCallback, PlatformAccessory, Service } from 'homebridge'
 
 export class ThermostatAccessory {
   private readonly platform: HomebridgePlatform
@@ -31,7 +31,7 @@ export class ThermostatAccessory {
     this.service.setCharacteristic(this.Characteristic.Name, config.name)
     this.service.setCharacteristic(this.Characteristic.ConfiguredName, config.name)
 
-    this.service.updateCharacteristic(this.Characteristic.CurrentHeatingCoolingState, new Error('A placeholder error object'))
+    // this.service.updateCharacteristic(this.Characteristic.CurrentHeatingCoolingState, new Error('A placeholder error object'))
 
     // each service must implement at-minimum the "required characteristics" for the given service type
     // see https://developers.homebridge.io/#/service/Thermostat
@@ -61,39 +61,31 @@ export class ThermostatAccessory {
   /**
    * Handle requests to get the current value of the "Current Heating Cooling State" characteristic
    */
-  async currentHeatingCoolingStateGet() {
-    let result: number | Error = null
-
+  async currentHeatingCoolingStateGet(callback: CharacteristicGetCallback) {
     this.platform.log.debug('Triggered GET CurrentHeatingCoolingState')
     try {
       const response = await fetch(this.urls.currentState())
       const res = await response.json()
-      result = res.value
+      callback(null, res.value)
     } catch (_a) {
       this.platform.log.error(`Error while retrieving data from '${this.urls.currentState()}'.`)
-      result = new Error('Error while getting data from thermostat')
+      callback(new Error('Error while getting data from thermostat'))
     }
-
-    return result
   }
 
   /**
    * Handle requests to get the current value of the "Target Heating Cooling State" characteristic
    */
-  async targetHeatingCoolingStateGet() {
-    let result: number | Error = null
-
+  async targetHeatingCoolingStateGet(callback: CharacteristicGetCallback) {
     this.platform.log.debug('Triggered GET TargetHeatingCoolingState')
     try {
       const response = await fetch(this.urls.targetState())
       const res = await response.json()
-      result = res.value
+      callback(null, res.value)
     } catch (_a) {
       this.platform.log.error(`Error while retrieving data from '${this.urls.targetState()}'.`)
-      result = new Error('Error while getting data from thermostat')
+      callback(new Error('Error while getting data from thermostat'))
     }
-
-    return result
   }
 
   /**
@@ -116,39 +108,31 @@ export class ThermostatAccessory {
   /**
    * Handle requests to get the current value of the "Current Temperature" characteristic
    */
-  async currentTemperatureGet() {
-    let result: number | Error = null
-
+  async currentTemperatureGet(callback: CharacteristicGetCallback) {
     this.platform.log.debug('Triggered GET CurrentTemperature')
     try {
       const response = await fetch(this.urls.currentTemperature())
       const res = await response.json()
-      result = res.value
+      callback(null, res.value)
     } catch (_a) {
       this.platform.log.error(`Error while retrieving data from '${this.urls.currentTemperature()}'.`)
-      result = new Error('Error while getting data from thermostat')
+      callback(new Error('Error while getting data from thermostat'))
     }
-
-    return result
   }
 
   /**
    * Handle requests to get the current value of the "Target Temperature" characteristic
    */
-  async targetTemperatureGet() {
-    let result: number | Error = null
-
+  async targetTemperatureGet(callback: CharacteristicGetCallback) {
     this.platform.log.debug('Triggered GET TargetTemperature')
     try {
       const response = await fetch(this.urls.targetTemperature())
       const res = await response.json()
-      result = res.value
+      callback(null, res.value)
     } catch (_a) {
       this.platform.log.error(`Error while retrieving data from '${this.urls.targetTemperature()}'.`)
-      result = new Error('Error while getting data from thermostat')
+      callback(new Error('Error while getting data from thermostat'))
     }
-
-    return result
   }
 
   /**
@@ -172,11 +156,11 @@ export class ThermostatAccessory {
   /**
    * Handle requests to get the current value of the "Temperature Display Units" characteristic
    */
-  temperatureDisplayUnitsGet() {
+  temperatureDisplayUnitsGet(callback: CharacteristicGetCallback) {
     this.platform.log.debug('Triggered GET TemperatureDisplayUnits')
     // set this to a valid value for TemperatureDisplayUnits
     // const currentValue: TemperatureDisplayUnits = this.state.temperatureDisplayUnits;
-    return TemperatureDisplayUnits.CELSIUS
+    callback(null, TemperatureDisplayUnits.CELSIUS)
   }
 
   /**
