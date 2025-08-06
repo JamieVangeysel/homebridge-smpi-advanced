@@ -1,6 +1,6 @@
 import fetch from 'cross-fetch'
 import { HomebridgePlatform, IThermostat } from './platform'
-import { CharacteristicGetCallback, PlatformAccessory, Service } from 'homebridge'
+import { CharacteristicGetCallback, CharacteristicValue, PlatformAccessory, Service } from 'homebridge'
 
 export class ThermostatAccessory {
   private readonly platform: HomebridgePlatform
@@ -9,6 +9,10 @@ export class ThermostatAccessory {
   private readonly service: Service
 
   private readonly Characteristic
+
+  private readonly serviceHeatingValve
+  private readonly serviceWaterValve
+  private readonly serviceHeatingOutlet
 
   constructor(platform: HomebridgePlatform, accessory: PlatformAccessory, config: IThermostat) {
     this.platform = platform
@@ -31,67 +35,118 @@ export class ThermostatAccessory {
     this.service.setCharacteristic(this.Characteristic.Name, config.name)
     this.service.setCharacteristic(this.Characteristic.ConfiguredName, config.name)
 
-    // this.service.updateCharacteristic(this.Characteristic.CurrentHeatingCoolingState, new Error('A placeholder error object'))
-
     // each service must implement at-minimum the "required characteristics" for the given service type
     // see https://developers.homebridge.io/#/service/Thermostat
     // create handlers for required characteristics
     this.service.getCharacteristic(this.Characteristic.CurrentHeatingCoolingState)
-      .on('get', this.currentHeatingCoolingStateGet.bind(this))
+      .onGet(this.currentHeatingCoolingStateGet.bind(this))
     this.service.getCharacteristic(this.Characteristic.TargetHeatingCoolingState)
-      .on('get', this.targetHeatingCoolingStateGet.bind(this))
-      .on('set', this.targetHeatingCoolingStateSet.bind(this))
+      .onGet(this.targetHeatingCoolingStateGet.bind(this))
+      .onSet(this.targetHeatingCoolingStateSet.bind(this))
     this.service.getCharacteristic(this.Characteristic.CurrentTemperature)
-      .on('get', this.currentTemperatureGet.bind(this))
+      .onGet(this.currentTemperatureGet.bind(this))
     this.service.getCharacteristic(this.Characteristic.TargetTemperature)
-      .on('get', this.targetTemperatureGet.bind(this))
-      .on('set', this.targetTemperatureSet.bind(this))
+      .onGet(this.targetTemperatureGet.bind(this))
+      .onSet(this.targetTemperatureSet.bind(this))
       .setProps({
         minValue: 16,
-        maxValue: 26,
-        minStep: 1
+        maxValue: 24,
+        minStep: .5
       })
     this.service.getCharacteristic(this.Characteristic.TemperatureDisplayUnits)
-      .on('get', this.temperatureDisplayUnitsGet.bind(this))
-      .on('set', this.temperatureDisplayUnitsSet.bind(this))
-    // this.service.getCharacteristic(this.Characteristic.CurrentRelativeHumidity)
-    //   .on('get', this.handleCurrentRelativeHumidityGet.bind(this))
+      .onGet(this.temperatureDisplayUnitsGet.bind(this))
+      .onSet(this.temperatureDisplayUnitsSet.bind(this))
+    this.service.getCharacteristic(this.Characteristic.CurrentRelativeHumidity)
+      .onGet(this.currentRelativeHumidityGet.bind(this))
+
+    if (config.valves) {
+      const heatingValve = config.valves.find(e => e.id === 'heating-valve')
+      this.serviceHeatingValve = this.accessory.getService(heatingValve.name) || this.accessory.addService(this.platform.Service.Valve, heatingValve.name)
+      this.serviceHeatingValve
+        .setCharacteristic(this.platform.api.hap.Characteristic.Name, heatingValve.name)
+        .setCharacteristic(this.platform.api.hap.Characteristic.ConfiguredName, heatingValve.name)
+        .getCharacteristic(this.platform.api.hap.Characteristic.Active)
+        .onGet(this.heatingValveActiveGet.bind(this))
+        .onSet((value) => {
+          this.platform.log.debug('Triggered SET Active:', value)
+        })
+      this.serviceHeatingValve.getCharacteristic(this.Characteristic.InUse)
+        .onGet(() => this.Characteristic.InUse.NOT_IN_USE)
+      this.serviceHeatingValve.getCharacteristic(this.Characteristic.ValveType)
+        .onGet(() => this.Characteristic.ValveType.GENERIC_VALVE)
+
+      const waterValve = config.valves.find(e => e.id === 'water-valve')
+      this.serviceWaterValve = this.accessory.getService(waterValve.name) || this.accessory.addService(this.platform.Service.Valve, waterValve.name)
+      this.serviceWaterValve
+        .setCharacteristic(this.platform.api.hap.Characteristic.Name, heatingValve.name)
+        .setCharacteristic(this.platform.api.hap.Characteristic.ConfiguredName, heatingValve.name)
+        .getCharacteristic(this.platform.api.hap.Characteristic.Active)
+        .onGet(this.waterValveActiveGet.bind(this))
+        .onSet((value) => {
+          this.platform.log.debug('Triggered SET Active:', value)
+        })
+      this.serviceWaterValve.getCharacteristic(this.Characteristic.InUse)
+        .onGet(() => this.Characteristic.InUse.NOT_IN_USE)
+      this.serviceWaterValve.getCharacteristic(this.Characteristic.ValveType)
+        .onGet(() => this.Characteristic.ValveType.GENERIC_VALVE)
+    }
+
+    if (config.outlets) {
+      const heatingElementOutlet = config.outlets.find(e => e.id === 'heating-element')
+      this.serviceHeatingOutlet = this.accessory.getService(heatingElementOutlet.name) || this.accessory.addService(this.platform.Service.Outlet, heatingElementOutlet.name)
+      this.serviceHeatingOutlet
+        .setCharacteristic(this.platform.api.hap.Characteristic.Name, heatingElementOutlet.name)
+        .setCharacteristic(this.platform.api.hap.Characteristic.ConfiguredName, heatingElementOutlet.name)
+        .getCharacteristic(this.platform.api.hap.Characteristic.On)
+        .onGet(this.heatingOutletOnGet.bind(this))
+        .onSet((value) => {
+          this.platform.log.debug('Triggered SET On:', value)
+        })
+    }
   }
 
   /**
    * Handle requests to get the current value of the "Current Heating Cooling State" characteristic
    */
-  async currentHeatingCoolingStateGet(callback: CharacteristicGetCallback) {
+  async currentHeatingCoolingStateGet(): Promise<number | Error> {
     this.platform.log.debug('Triggered GET CurrentHeatingCoolingState')
+    let value: number | Error = null
+
     try {
       const response = await fetch(this.urls.currentState())
       const res = await response.json()
-      callback(null, res.value)
+      value = res.value
     } catch (_a) {
       this.platform.log.error(`Error while retrieving data from '${this.urls.currentState()}'.`)
-      callback(new Error('Error while getting data from thermostat'))
+      value = new Error('Error while getting data from thermostat')
     }
+
+    return value
   }
 
   /**
    * Handle requests to get the current value of the "Target Heating Cooling State" characteristic
    */
-  async targetHeatingCoolingStateGet(callback: CharacteristicGetCallback) {
+  async targetHeatingCoolingStateGet() {
     this.platform.log.debug('Triggered GET TargetHeatingCoolingState')
+    let value: number | Error = null
+
     try {
       const response = await fetch(this.urls.targetState())
       const res = await response.json()
-      callback(null, res.value)
+      value = res.value
     } catch (_a) {
       this.platform.log.error(`Error while retrieving data from '${this.urls.targetState()}'.`)
-      callback(new Error('Error while getting data from thermostat'))
+      value = new Error('Error while getting data from thermostat')
     }
+
+    return value
   }
 
   /**
    * Handle requests to set the "Target Heating Cooling State" characteristic
    */
-  async targetHeatingCoolingStateSet(value: number) {
+  async targetHeatingCoolingStateSet(value: CharacteristicValue) {
     this.platform.log.debug('Triggered SET TargetHeatingCoolingState:', value)
     // const state: HeatingCoolingStateEnum = value as HeatingCoolingStateEnum;
     await fetch(this.urls.targetState(), {
@@ -110,14 +165,18 @@ export class ThermostatAccessory {
    */
   async currentTemperatureGet(callback: CharacteristicGetCallback) {
     this.platform.log.debug('Triggered GET CurrentTemperature')
+    let value: number | Error = null
+
     try {
       const response = await fetch(this.urls.currentTemperature())
       const res = await response.json()
-      callback(null, res.value)
+      value = res.value
     } catch (_a) {
       this.platform.log.error(`Error while retrieving data from '${this.urls.currentTemperature()}'.`)
-      callback(new Error('Error while getting data from thermostat'))
+      value = new Error('Error while getting data from thermostat')
     }
+
+    return value
   }
 
   /**
@@ -125,14 +184,18 @@ export class ThermostatAccessory {
    */
   async targetTemperatureGet(callback: CharacteristicGetCallback) {
     this.platform.log.debug('Triggered GET TargetTemperature')
+    let value: number | Error = null
+
     try {
       const response = await fetch(this.urls.targetTemperature())
       const res = await response.json()
-      callback(null, res.value)
+      value = res.value
     } catch (_a) {
       this.platform.log.error(`Error while retrieving data from '${this.urls.targetTemperature()}'.`)
-      callback(new Error('Error while getting data from thermostat'))
+      value = new Error('Error while getting data from thermostat')
     }
+
+    return value
   }
 
   /**
@@ -156,11 +219,11 @@ export class ThermostatAccessory {
   /**
    * Handle requests to get the current value of the "Temperature Display Units" characteristic
    */
-  temperatureDisplayUnitsGet(callback: CharacteristicGetCallback) {
+  temperatureDisplayUnitsGet() {
     this.platform.log.debug('Triggered GET TemperatureDisplayUnits')
     // set this to a valid value for TemperatureDisplayUnits
     // const currentValue: TemperatureDisplayUnits = this.state.temperatureDisplayUnits;
-    callback(null, TemperatureDisplayUnits.CELSIUS)
+    return TemperatureDisplayUnits.CELSIUS
   }
 
   /**
@@ -173,19 +236,81 @@ export class ThermostatAccessory {
     return
   }
 
-  currentRelativeHumidityGet() {
-    this.platform.log.debug('Triggered GET CurrentRelativeHumidity:')
+  async currentRelativeHumidityGet() {
+    this.platform.log.debug('Triggered GET RelativeHumidity')
+    let value: number | Error = null
 
-    return 0
+    try {
+      const response = await fetch(this.urls.currentRelativeHumidity())
+      const res = await response.json()
+      value = res.value * 100
+    } catch (_a) {
+      this.platform.log.error(`Error while retrieving data from '${this.urls.currentRelativeHumidity()}'.`)
+      value = new Error('Error while getting data from thermostat')
+    }
+
+    return value
+  }
+
+  async heatingValveActiveGet() {
+    this.platform.log.debug('Triggered GET RelativeHumidity')
+    let value: number | Error = null
+
+    try {
+      const response = await fetch(this.urls.heatingValveActive())
+      const res = await response.json()
+      value = res.value
+    } catch (_a) {
+      this.platform.log.error(`Error while retrieving data from '${this.urls.heatingValveActive()}'.`)
+      value = new Error('Error while getting data from thermostat')
+    }
+
+    return value
+  }
+
+  async waterValveActiveGet() {
+    this.platform.log.debug('Triggered GET WaterValve Active')
+    let value: number | Error = null
+
+    try {
+      const response = await fetch(this.urls.waterValveActive())
+      const res = await response.json()
+      value = res.value
+    } catch (_a) {
+      this.platform.log.error(`Error while retrieving data from '${this.urls.waterValveActive()}'.`)
+      value = new Error('Error while getting data from thermostat')
+    }
+
+    return value
+  }
+
+  async heatingOutletOnGet() {
+    this.platform.log.debug('Triggered GET HeatingOutlet On')
+    let value: number | Error = null
+
+    try {
+      const response = await fetch(this.urls.heatingElementOn())
+      const res = await response.json()
+      value = res.value
+    } catch (_a) {
+      this.platform.log.error(`Error while retrieving data from '${this.urls.heatingElementOn()}'.`)
+      value = new Error('Error while getting data from thermostat')
+    }
+
+    return value
   }
 
   get urls(): any {
     const baseUrl: string = `http://${this.config.host}:${this.config.port ?? 8080}/${this.config.instance ?? 'default'}`
     return {
-      currentTemperature: () => `${baseUrl}/current-temperature`,
-      targetTemperature: () => `${baseUrl}/target-temperature`,
-      currentState: () => `${baseUrl}/current-state`,
-      targetState: () => `${baseUrl}/target-state`
+      currentTemperature: (): string => `${baseUrl}/current-temperature`,
+      targetTemperature: (): string => `${baseUrl}/target-temperature`,
+      currentRelativeHumidity: (): string => `${baseUrl}/current-relative-humidity`,
+      currentState: (): string => `${baseUrl}/current-state`,
+      targetState: (): string => `${baseUrl}/target-state`,
+      heatingValveActive: (): string => `${baseUrl}/heating-valve/active`,
+      waterValveActive: (): string => `${baseUrl}/water-valve/active`,
+      heatingElementOn: (): string => `${baseUrl}/heating-element/on`
     }
   }
 }

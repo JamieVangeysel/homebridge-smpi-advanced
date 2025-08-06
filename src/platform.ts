@@ -211,6 +211,14 @@ export interface IThermostat {
   port: number
   instance?: string
   host: string
+  valves?: {
+    name: string,
+    id: 'heating-valve' | 'water-valve'
+  }[],
+  outlets?: {
+    name: string,
+    id: 'heating-element'
+  }[]
 }
 
 export interface ISecuritySystem {

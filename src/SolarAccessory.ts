@@ -226,12 +226,12 @@ export class SolarAccessory {
         }
         this.platform.log.debug('SolarAccessory.checkDetection() -- start')
 
-        this.checkDetection(this.isSunrise, this.sunriseDetected)
-        this.checkDetection(this.isSunset, this.sunsetDetected)
-        this.checkDetection(this.isNoon, this.noonDetected)
-        this.checkDetection(this.isGoldenHour, this.goldenHourDetected)
-        this.checkDetection(this.isDawn, this.dawnDetected)
-        this.checkDetection(this.isDusk, this.duskDetected)
+        this.checkDetection(this.serviceSunrise, this.isSunrise, this.sunriseDetected)
+        this.checkDetection(this.serviceSunset, this.isSunset, this.sunsetDetected)
+        this.checkDetection(this.serviceNoon, this.isNoon, this.noonDetected)
+        this.checkDetection(this.serviceGoldenHour, this.isGoldenHour, this.goldenHourDetected)
+        this.checkDetection(this.serviceDawn, this.isDawn, this.dawnDetected)
+        this.checkDetection(this.serviceDusk, this.isDusk, this.duskDetected)
 
         this.platform.log.debug('SolarAccessory.checkDetection() -- end')
         // this.serviceSunrise.setCharacteristic()
@@ -245,14 +245,14 @@ export class SolarAccessory {
     this.platform.log.debug('SolarAccessory.update() -- end', performance.now() - start)
   }
 
-  checkDetection(currentState: boolean, targetState: boolean): boolean {
+  checkDetection(service: Service, currentState: boolean, targetState: boolean): boolean {
     if (currentState === undefined) {
       currentState = targetState
     }
 
     if (currentState !== targetState) {
       this.platform.log.info('currentState must change; targetState: ' + targetState)
-      this.serviceSunrise.setCharacteristic(this.platform.api.hap.Characteristic.MotionDetected, targetState ? 1 : 0)
+      service.setCharacteristic(this.platform.api.hap.Characteristic.MotionDetected, targetState ? 1 : 0)
       currentState = targetState
     }
 
