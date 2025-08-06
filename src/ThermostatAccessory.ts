@@ -61,10 +61,11 @@ export class ThermostatAccessory {
 
     if (config.valves) {
       const heatingValve = config.valves.find(e => e.id === 'heating-valve')
-      this.serviceHeatingValve = this.accessory.getService(heatingValve.name) || this.accessory.addService(this.platform.Service.Valve, heatingValve.name)
+      this.serviceHeatingValve = this.accessory.getService(heatingValve.name) || this.accessory.addService(this.platform.Service.Valve, heatingValve.name, heatingValve.name + '-valve')
       this.serviceHeatingValve
         .setCharacteristic(this.platform.api.hap.Characteristic.Name, heatingValve.name)
         .setCharacteristic(this.platform.api.hap.Characteristic.ConfiguredName, heatingValve.name)
+      this.serviceHeatingValve
         .getCharacteristic(this.platform.api.hap.Characteristic.Active)
         .onGet(this.heatingValveActiveGet.bind(this))
         .onSet((value) => {
@@ -76,15 +77,14 @@ export class ThermostatAccessory {
         .onGet(() => this.Characteristic.ValveType.GENERIC_VALVE)
 
       const waterValve = config.valves.find(e => e.id === 'water-valve')
-      this.serviceWaterValve = this.accessory.getService(waterValve.name) || this.accessory.addService(this.platform.Service.Valve, waterValve.name)
+      this.serviceWaterValve = this.accessory.getService(waterValve.name) || this.accessory.addService(this.platform.Service.Valve, waterValve.name, waterValve.name + '-valve')
       this.serviceWaterValve
-        .setCharacteristic(this.platform.api.hap.Characteristic.Name, heatingValve.name)
-        .setCharacteristic(this.platform.api.hap.Characteristic.ConfiguredName, heatingValve.name)
+        .setCharacteristic(this.platform.api.hap.Characteristic.Name, waterValve.name)
+        .setCharacteristic(this.platform.api.hap.Characteristic.ConfiguredName, waterValve.name)
+      this.serviceWaterValve
         .getCharacteristic(this.platform.api.hap.Characteristic.Active)
         .onGet(this.waterValveActiveGet.bind(this))
-        .onSet((value) => {
-          this.platform.log.debug('Triggered SET Active:', value)
-        })
+        .onSet(this.waterValveActiveSet.bind(this))
       this.serviceWaterValve.getCharacteristic(this.Characteristic.InUse)
         .onGet(() => this.Characteristic.InUse.NOT_IN_USE)
       this.serviceWaterValve.getCharacteristic(this.Characteristic.ValveType)
@@ -93,10 +93,11 @@ export class ThermostatAccessory {
 
     if (config.outlets) {
       const heatingElementOutlet = config.outlets.find(e => e.id === 'heating-element')
-      this.serviceHeatingOutlet = this.accessory.getService(heatingElementOutlet.name) || this.accessory.addService(this.platform.Service.Outlet, heatingElementOutlet.name)
+      this.serviceHeatingOutlet = this.accessory.getService(heatingElementOutlet.name) || this.accessory.addService(this.platform.Service.Outlet, heatingElementOutlet.name, heatingElementOutlet.name + '-outlet')
       this.serviceHeatingOutlet
         .setCharacteristic(this.platform.api.hap.Characteristic.Name, heatingElementOutlet.name)
         .setCharacteristic(this.platform.api.hap.Characteristic.ConfiguredName, heatingElementOutlet.name)
+      this.serviceHeatingOutlet
         .getCharacteristic(this.platform.api.hap.Characteristic.On)
         .onGet(this.heatingOutletOnGet.bind(this))
         .onSet((value) => {
@@ -282,6 +283,24 @@ export class ThermostatAccessory {
     }
 
     return value
+  }
+
+  /**
+   * Handle requests to set the "Target Temperature" characteristic
+   */
+  async waterValveActiveSet(value: number) {
+    this.platform.log.debug('Triggered SET WaterValve Active:', value)
+    // const temperature: number = value as number
+    await fetch(this.urls.waterValveActive(), {
+      method: 'post',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      //make sure to serialize your JSON body
+      body: JSON.stringify({ value })
+    })
+    return
   }
 
   async heatingOutletOnGet() {
