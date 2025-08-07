@@ -49,7 +49,7 @@ export class ThermostatAccessory {
       .onGet(this.targetTemperatureGet.bind(this))
       .onSet(this.targetTemperatureSet.bind(this))
       .setProps({
-        minValue: 16,
+        minValue: 10,
         maxValue: 24,
         minStep: .5
       })
@@ -61,48 +61,54 @@ export class ThermostatAccessory {
 
     if (config.valves) {
       const heatingValve = config.valves.find(e => e.id === 'heating-valve')
-      this.serviceHeatingValve = this.accessory.getService(heatingValve.name) || this.accessory.addService(this.platform.Service.Valve, heatingValve.name, heatingValve.name + '-valve')
-      this.serviceHeatingValve
-        .setCharacteristic(this.platform.api.hap.Characteristic.Name, heatingValve.name)
-        .setCharacteristic(this.platform.api.hap.Characteristic.ConfiguredName, heatingValve.name)
-      this.serviceHeatingValve
-        .getCharacteristic(this.platform.api.hap.Characteristic.Active)
-        .onGet(this.heatingValveActiveGet.bind(this))
-        .onSet((value) => {
-          this.platform.log.debug('Triggered SET Active:', value)
-        })
-      this.serviceHeatingValve.getCharacteristic(this.Characteristic.InUse)
-        .onGet(() => this.Characteristic.InUse.NOT_IN_USE)
-      this.serviceHeatingValve.getCharacteristic(this.Characteristic.ValveType)
-        .onGet(() => this.Characteristic.ValveType.GENERIC_VALVE)
+      if (heatingValve) {
+        this.serviceHeatingValve = this.accessory.getService(heatingValve.name) || this.accessory.addService(this.platform.Service.Valve, heatingValve.name, heatingValve.name + '-valve')
+        this.serviceHeatingValve
+          .setCharacteristic(this.platform.api.hap.Characteristic.Name, heatingValve.name)
+          .setCharacteristic(this.platform.api.hap.Characteristic.ConfiguredName, heatingValve.name)
+        this.serviceHeatingValve
+          .getCharacteristic(this.platform.api.hap.Characteristic.Active)
+          .onGet(this.heatingValveActiveGet.bind(this))
+          .onSet((value) => {
+            this.platform.log.debug('Triggered SET Active:', value)
+          })
+        this.serviceHeatingValve.getCharacteristic(this.Characteristic.InUse)
+          .onGet(() => this.Characteristic.InUse.NOT_IN_USE)
+        this.serviceHeatingValve.getCharacteristic(this.Characteristic.ValveType)
+          .onGet(() => this.Characteristic.ValveType.GENERIC_VALVE)
+      }
 
       const waterValve = config.valves.find(e => e.id === 'water-valve')
-      this.serviceWaterValve = this.accessory.getService(waterValve.name) || this.accessory.addService(this.platform.Service.Valve, waterValve.name, waterValve.name + '-valve')
-      this.serviceWaterValve
-        .setCharacteristic(this.platform.api.hap.Characteristic.Name, waterValve.name)
-        .setCharacteristic(this.platform.api.hap.Characteristic.ConfiguredName, waterValve.name)
-      this.serviceWaterValve
-        .getCharacteristic(this.platform.api.hap.Characteristic.Active)
-        .onGet(this.waterValveActiveGet.bind(this))
-        .onSet(this.waterValveActiveSet.bind(this))
-      this.serviceWaterValve.getCharacteristic(this.Characteristic.InUse)
-        .onGet(() => this.Characteristic.InUse.NOT_IN_USE)
-      this.serviceWaterValve.getCharacteristic(this.Characteristic.ValveType)
-        .onGet(() => this.Characteristic.ValveType.GENERIC_VALVE)
+      if (waterValve) {
+        this.serviceWaterValve = this.accessory.getService(waterValve.name) || this.accessory.addService(this.platform.Service.Valve, waterValve.name, waterValve.name + '-valve')
+        this.serviceWaterValve
+          .setCharacteristic(this.platform.api.hap.Characteristic.Name, waterValve.name)
+          .setCharacteristic(this.platform.api.hap.Characteristic.ConfiguredName, waterValve.name)
+        this.serviceWaterValve
+          .getCharacteristic(this.platform.api.hap.Characteristic.Active)
+          .onGet(this.waterValveActiveGet.bind(this))
+          .onSet(this.waterValveActiveSet.bind(this))
+        this.serviceWaterValve.getCharacteristic(this.Characteristic.InUse)
+          .onGet(() => this.Characteristic.InUse.NOT_IN_USE)
+        this.serviceWaterValve.getCharacteristic(this.Characteristic.ValveType)
+          .onGet(() => this.Characteristic.ValveType.GENERIC_VALVE)
+      }
     }
 
     if (config.outlets) {
       const heatingElementOutlet = config.outlets.find(e => e.id === 'heating-element')
-      this.serviceHeatingOutlet = this.accessory.getService(heatingElementOutlet.name) || this.accessory.addService(this.platform.Service.Outlet, heatingElementOutlet.name, heatingElementOutlet.name + '-outlet')
-      this.serviceHeatingOutlet
-        .setCharacteristic(this.platform.api.hap.Characteristic.Name, heatingElementOutlet.name)
-        .setCharacteristic(this.platform.api.hap.Characteristic.ConfiguredName, heatingElementOutlet.name)
-      this.serviceHeatingOutlet
-        .getCharacteristic(this.platform.api.hap.Characteristic.On)
-        .onGet(this.heatingOutletOnGet.bind(this))
-        .onSet((value) => {
-          this.platform.log.debug('Triggered SET On:', value)
-        })
+      if (heatingElementOutlet) {
+        this.serviceHeatingOutlet = this.accessory.getService(heatingElementOutlet.name) || this.accessory.addService(this.platform.Service.Outlet, heatingElementOutlet.name, heatingElementOutlet.name + '-outlet')
+        this.serviceHeatingOutlet
+          .setCharacteristic(this.platform.api.hap.Characteristic.Name, heatingElementOutlet.name)
+          .setCharacteristic(this.platform.api.hap.Characteristic.ConfiguredName, heatingElementOutlet.name)
+        this.serviceHeatingOutlet
+          .getCharacteristic(this.platform.api.hap.Characteristic.On)
+          .onGet(this.heatingOutletOnGet.bind(this))
+          .onSet((value) => {
+            this.platform.log.debug('Triggered SET On:', value)
+          })
+      }
     }
   }
 
