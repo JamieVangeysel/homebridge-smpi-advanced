@@ -69,13 +69,13 @@ export class ThermostatAccessory {
         this.serviceHeatingValve
           .getCharacteristic(this.platform.api.hap.Characteristic.Active)
           .onGet(this.heatingValveActiveGet.bind(this))
-          .onSet((value) => {
+          .onSet(async (value) => {
             this.platform.log.debug('Triggered SET Active:', value)
           })
         this.serviceHeatingValve.getCharacteristic(this.Characteristic.InUse)
-          .onGet(() => this.Characteristic.InUse.NOT_IN_USE)
+          .onGet(this.heatingValveActiveGet.bind(this))
         this.serviceHeatingValve.getCharacteristic(this.Characteristic.ValveType)
-          .onGet(() => this.Characteristic.ValveType.GENERIC_VALVE)
+          .onGet(async () => this.Characteristic.ValveType.GENERIC_VALVE)
       }
 
       const waterValve = config.valves.find(e => e.id === 'water-valve')
@@ -89,9 +89,9 @@ export class ThermostatAccessory {
           .onGet(this.waterValveActiveGet.bind(this))
           .onSet(this.waterValveActiveSet.bind(this))
         this.serviceWaterValve.getCharacteristic(this.Characteristic.InUse)
-          .onGet(() => this.Characteristic.InUse.NOT_IN_USE)
+          .onGet(this.waterValveActiveGet.bind(this))
         this.serviceWaterValve.getCharacteristic(this.Characteristic.ValveType)
-          .onGet(() => this.Characteristic.ValveType.GENERIC_VALVE)
+          .onGet(async () => this.Characteristic.ValveType.SHOWER_HEAD)
       }
     }
 
@@ -105,7 +105,7 @@ export class ThermostatAccessory {
         this.serviceHeatingOutlet
           .getCharacteristic(this.platform.api.hap.Characteristic.On)
           .onGet(this.heatingOutletOnGet.bind(this))
-          .onSet((value) => {
+          .onSet(async (value) => {
             this.platform.log.debug('Triggered SET On:', value)
           })
       }
@@ -170,7 +170,7 @@ export class ThermostatAccessory {
   /**
    * Handle requests to get the current value of the "Current Temperature" characteristic
    */
-  async currentTemperatureGet(callback: CharacteristicGetCallback) {
+  async currentTemperatureGet() {
     this.platform.log.debug('Triggered GET CurrentTemperature')
     let value: number | Error = null
 
@@ -189,7 +189,7 @@ export class ThermostatAccessory {
   /**
    * Handle requests to get the current value of the "Target Temperature" characteristic
    */
-  async targetTemperatureGet(callback: CharacteristicGetCallback) {
+  async targetTemperatureGet() {
     this.platform.log.debug('Triggered GET TargetTemperature')
     let value: number | Error = null
 
@@ -208,7 +208,7 @@ export class ThermostatAccessory {
   /**
    * Handle requests to set the "Target Temperature" characteristic
    */
-  async targetTemperatureSet(value: number) {
+  async targetTemperatureSet(value: CharacteristicValue) {
     this.platform.log.debug('Triggered SET TargetTemperature:', value)
     // const temperature: number = value as number;
     await fetch(this.urls.targetTemperature(), {
@@ -236,7 +236,7 @@ export class ThermostatAccessory {
   /**
    * Handle requests to set the "Temperature Display Units" characteristic
    */
-  temperatureDisplayUnitsSet(value: number) {
+  temperatureDisplayUnitsSet(value: CharacteristicValue) {
     this.platform.log.debug('Triggered SET TemperatureDisplayUnits:', value)
     // const displayUnit: TemperatureDisplayUnits = value as TemperatureDisplayUnits;
     // this.state.temperatureDisplayUnits = displayUnit;
@@ -306,7 +306,7 @@ export class ThermostatAccessory {
       //make sure to serialize your JSON body
       body: JSON.stringify({ value })
     })
-    return
+    // update status of other services as well
   }
 
   async heatingOutletOnGet() {
@@ -337,6 +337,11 @@ export class ThermostatAccessory {
       waterValveActive: (): string => `${baseUrl}/water-valve/active`,
       heatingElementOn: (): string => `${baseUrl}/heating-element/on`
     }
+  }
+
+  private async fullUpdate() {
+    this.platform.log.debug('Triggered Full Update')
+    service.updateCharacteristic(Characteristic.Brightness, 60)
   }
 }
 
