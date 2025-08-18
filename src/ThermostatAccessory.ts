@@ -1,6 +1,6 @@
 import fetch from 'cross-fetch'
 import { HomebridgePlatform, IThermostat } from './platform'
-import { CharacteristicGetCallback, CharacteristicValue, PlatformAccessory, Service } from 'homebridge'
+import { CharacteristicValue, PlatformAccessory, Service } from 'homebridge'
 
 export class ThermostatAccessory {
   private readonly platform: HomebridgePlatform
@@ -10,8 +10,6 @@ export class ThermostatAccessory {
 
   private readonly Characteristic
 
-  private readonly serviceHeatingValve
-  private readonly serviceWaterValve
   private readonly serviceHeatingOutlet
 
   constructor(platform: HomebridgePlatform, accessory: PlatformAccessory, config: IThermostat) {
@@ -49,7 +47,7 @@ export class ThermostatAccessory {
       .onGet(this.targetTemperatureGet.bind(this))
       .onSet(this.targetTemperatureSet.bind(this))
       .setProps({
-        minValue: 10,
+        minValue: 16,
         maxValue: 24,
         minStep: .5
       })
@@ -62,36 +60,38 @@ export class ThermostatAccessory {
     if (config.valves) {
       const heatingValve = config.valves.find(e => e.id === 'heating-valve')
       if (heatingValve) {
-        this.serviceHeatingValve = this.accessory.getService(heatingValve.name) || this.accessory.addService(this.platform.Service.Valve, heatingValve.name, heatingValve.name + '-valve')
-        this.serviceHeatingValve
-          .setCharacteristic(this.platform.api.hap.Characteristic.Name, heatingValve.name)
-          .setCharacteristic(this.platform.api.hap.Characteristic.ConfiguredName, heatingValve.name)
-        this.serviceHeatingValve
-          .getCharacteristic(this.platform.api.hap.Characteristic.Active)
-          .onGet(this.heatingValveActiveGet.bind(this))
-          .onSet(async (value) => {
-            this.platform.log.debug('Triggered SET Active:', value)
-          })
-        this.serviceHeatingValve.getCharacteristic(this.Characteristic.InUse)
-          .onGet(this.heatingValveActiveGet.bind(this))
-        this.serviceHeatingValve.getCharacteristic(this.Characteristic.ValveType)
-          .onGet(async () => this.Characteristic.ValveType.GENERIC_VALVE)
+        this.accessory.removeService(this.accessory.getService(heatingValve.name))
+        // this.serviceHeatingValve = this.accessory.getService(heatingValve.name) || this.accessory.addService(this.platform.Service.Valve, heatingValve.name, heatingValve.name + '-valve')
+        // this.serviceHeatingValve
+        //   .setCharacteristic(this.platform.api.hap.Characteristic.Name, heatingValve.name)
+        //   .setCharacteristic(this.platform.api.hap.Characteristic.ConfiguredName, heatingValve.name)
+        // this.serviceHeatingValve
+        //   .getCharacteristic(this.platform.api.hap.Characteristic.Active)
+        //   .onGet(this.heatingValveActiveGet.bind(this))
+        //   .onSet(async (value) => {
+        //     this.platform.log.debug('Triggered SET Active:', value)
+        //   })
+        // this.serviceHeatingValve.getCharacteristic(this.Characteristic.InUse)
+        //   .onGet(this.heatingValveActiveGet.bind(this))
+        // this.serviceHeatingValve.getCharacteristic(this.Characteristic.ValveType)
+        //   .onGet(async () => this.Characteristic.ValveType.GENERIC_VALVE)
       }
 
       const waterValve = config.valves.find(e => e.id === 'water-valve')
       if (waterValve) {
-        this.serviceWaterValve = this.accessory.getService(waterValve.name) || this.accessory.addService(this.platform.Service.Valve, waterValve.name, waterValve.name + '-valve')
-        this.serviceWaterValve
-          .setCharacteristic(this.platform.api.hap.Characteristic.Name, waterValve.name)
-          .setCharacteristic(this.platform.api.hap.Characteristic.ConfiguredName, waterValve.name)
-        this.serviceWaterValve
-          .getCharacteristic(this.platform.api.hap.Characteristic.Active)
-          .onGet(this.waterValveActiveGet.bind(this))
-          .onSet(this.waterValveActiveSet.bind(this))
-        this.serviceWaterValve.getCharacteristic(this.Characteristic.InUse)
-          .onGet(this.waterValveActiveGet.bind(this))
-        this.serviceWaterValve.getCharacteristic(this.Characteristic.ValveType)
-          .onGet(async () => this.Characteristic.ValveType.SHOWER_HEAD)
+        this.accessory.removeService(this.accessory.getService(waterValve.name))
+        // this.serviceWaterValve = this.accessory.getService(waterValve.name) || this.accessory.addService(this.platform.Service.Valve, waterValve.name, waterValve.name + '-valve')
+        // this.serviceWaterValve
+        //   .setCharacteristic(this.platform.api.hap.Characteristic.Name, waterValve.name)
+        //   .setCharacteristic(this.platform.api.hap.Characteristic.ConfiguredName, waterValve.name)
+        // this.serviceWaterValve
+        //   .getCharacteristic(this.platform.api.hap.Characteristic.Active)
+        //   .onGet(this.waterValveActiveGet.bind(this))
+        //   .onSet(this.waterValveActiveSet.bind(this))
+        // this.serviceWaterValve.getCharacteristic(this.Characteristic.InUse)
+        //   .onGet(this.waterValveActiveGet.bind(this))
+        // this.serviceWaterValve.getCharacteristic(this.Characteristic.ValveType)
+        //   .onGet(async () => this.Characteristic.ValveType.SHOWER_HEAD)
       }
     }
 
@@ -259,56 +259,6 @@ export class ThermostatAccessory {
     return value
   }
 
-  async heatingValveActiveGet() {
-    this.platform.log.debug('Triggered GET RelativeHumidity')
-    let value: number | Error = null
-
-    try {
-      const response = await fetch(this.urls.heatingValveActive())
-      const res = await response.json()
-      value = res.value
-    } catch (_a) {
-      this.platform.log.error(`Error while retrieving data from '${this.urls.heatingValveActive()}'.`)
-      value = new Error('Error while getting data from thermostat')
-    }
-
-    return value
-  }
-
-  async waterValveActiveGet() {
-    this.platform.log.debug('Triggered GET WaterValve Active')
-    let value: number | Error = null
-
-    try {
-      const response = await fetch(this.urls.waterValveActive())
-      const res = await response.json()
-      value = res.value
-    } catch (_a) {
-      this.platform.log.error(`Error while retrieving data from '${this.urls.waterValveActive()}'.`)
-      value = new Error('Error while getting data from thermostat')
-    }
-
-    return value
-  }
-
-  /**
-   * Handle requests to set the "Target Temperature" characteristic
-   */
-  async waterValveActiveSet(value: number) {
-    this.platform.log.debug('Triggered SET WaterValve Active:', value)
-    // const temperature: number = value as number
-    await fetch(this.urls.waterValveActive(), {
-      method: 'post',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      },
-      //make sure to serialize your JSON body
-      body: JSON.stringify({ value })
-    })
-    // update status of other services as well
-  }
-
   async heatingOutletOnGet() {
     this.platform.log.debug('Triggered GET HeatingOutlet On')
     let value: number | Error = null
@@ -333,15 +283,8 @@ export class ThermostatAccessory {
       currentRelativeHumidity: (): string => `${baseUrl}/current-relative-humidity`,
       currentState: (): string => `${baseUrl}/current-state`,
       targetState: (): string => `${baseUrl}/target-state`,
-      heatingValveActive: (): string => `${baseUrl}/heating-valve/active`,
-      waterValveActive: (): string => `${baseUrl}/water-valve/active`,
       heatingElementOn: (): string => `${baseUrl}/heating-element/on`
     }
-  }
-
-  private async fullUpdate() {
-    this.platform.log.debug('Triggered Full Update')
-    service.updateCharacteristic(Characteristic.Brightness, 60)
   }
 }
 
