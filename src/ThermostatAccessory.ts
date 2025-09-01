@@ -9,7 +9,6 @@ export class ThermostatAccessory {
   private readonly service: Service
 
   private readonly Characteristic
-
   private readonly serviceHeatingOutlet
 
   constructor(platform: HomebridgePlatform, accessory: PlatformAccessory, config: IThermostat) {
